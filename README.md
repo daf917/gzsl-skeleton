@@ -6,6 +6,11 @@
   <img src="https://img.shields.io/github/license/your-username/GZSL?style=flat" alt="License">
 </p>
 
+<p align="center">
+  <img src="image/method.png" alt="Figure 2: Framework Overview" width="90%">
+</p>
+<p align="center"><b>Figure 2.</b> Overview of the proposed framework.</p>
+
 This is a PyTorch implementation of the paper:
 
 > **Generalized Zero-Shot Skeleton Action Recognition with Compositional Motion-Attribute Primitives**  
@@ -17,8 +22,6 @@ This is a PyTorch implementation of the paper:
   <a href="#installation">Installation</a> •
   <a href="#quick-start">Quick Start</a> •
   <a href="#project-structure">Structure</a> •
-  <a href="#model-architecture">Architecture</a> •
-  <a href="#datasets">Datasets</a> •
   <a href="#citation">Citation</a>
 </p>
 
@@ -27,14 +30,6 @@ This is a PyTorch implementation of the paper:
 ## Overview
 
 This project implements a compositional framework for **Generalized Zero-Shot (GZS) skeleton-based action recognition** that learns reusable body-part motion primitives and aligns them with structured textual semantics.
-
-### Key Features
-
-- **Motion Attribute Extraction**: Part-level 8D motion-attribute vectors capturing spatial shape, dominant direction, and short-term dynamics
-- **Dual-branch Architecture**: CLIP-based text encoder + Shift-GCN-based skeleton encoder
-- **Hierarchical Cross-Modal Alignment**: Both global and part-level alignment between skeleton and text
-- **Primitive Independence**: Enforces independence between different body-part primitives
-- **Few-shot Support**: K-shot evaluation on HMDB-51 (K ∈ {2, 4, 8, 16})
 
 ---
 
@@ -131,68 +126,6 @@ GZSL/
 ├── README.md
 └── __init__.py
 ```
-
----
-
-## Model Architecture
-
-### Motion Attribute (Section 3.1)
-
-Each body part is characterized by an **8-dimensional motion attribute vector**:
-
-| Index | Attribute | Description |
-|-------|-----------|-------------|
-| 1 | Compactness Mean $d_\mu$ | Mean distance to centroid |
-| 2 | Compactness Variance $d_\sigma^2$ | Variance of distances |
-| 3 | Spatial Extent $e$ | Diagonal of bounding box |
-| 4 | PCA Eigenvalue Ratio $\rho$ | Anisotropy measure |
-| 5 | Principal Angle $\theta$ | Dominant orientation |
-| 6 | Velocity Magnitude $k$ | Average velocity |
-| 7 | Acceleration Magnitude $a_c$ | Average acceleration |
-| 8 | Relative Deformation $E_{rel}$ | Frame-to-frame deformation |
-
-### Loss Functions (Section 3.3)
-
-The overall training objective:
-
-$$\mathcal{L} = \lambda_p \mathcal{L}_p + \lambda_g \mathcal{L}_g + \lambda_c \mathcal{L}_{cons} + \lambda_i \mathcal{L}_{ind}$$
-
-| Loss | Description |
-|------|-------------|
-| $\mathcal{L}_p$ | Primitive-level alignment (InfoNCE) |
-| $\mathcal{L}_g$ | Global-level alignment (InfoNCE) |
-| $\mathcal{L}_{cons}$ | Consistency between compositional and Shift-GCN global features |
-| $\mathcal{L}_{ind}$ | Independence between different body-part primitives |
-
-### Primitive Composition (Section 3.3)
-
-Part-level features are aggregated using attention:
-
-$$\gamma_{i,p} = \text{softmax}(\mathbf{w}^\top \sigma(\mathbf{W}\mathbf{h}_{i,p}))$$
-
-$$\mathbf{g}_i = \sum_{p=1}^{P} \gamma_{i,p} \cdot \mathbf{h}_{i,p}$$
-
----
-
-## Datasets
-
-| Dataset | Classes | Samples | Joints |
-|---------|---------|---------|--------|
-| NTU RGB+D 60 | 60 | ~56K | 25 |
-| NTU RGB+D 120 | 120 | ~110K | 25 |
-| UCF101 | 101 | ~13K | 17 |
-| PKU-MMD | 51 | ~20K | 25 |
-| HMDB-51 | 51 | ~7K | 17 |
-
-### GZS Splits (Standard)
-
-| Dataset | Seen | Unseen |
-|---------|------|--------|
-| NTU60 | 55 | 5 |
-| NTU120 | 110 | 10 |
-| UCF101 | 80 | 21 |
-| PKU-MMD | 46 | 5 |
-| HMDB-51 | 31 | 20 |
 
 ---
 
