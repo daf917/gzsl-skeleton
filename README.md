@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <img src="image/method.png" alt="Figure 2: Framework Overview" width="90%">
+  <img src="./image/method.png" alt="Figure 2: Framework Overview" width="90%">
 </p>
 <p align="center"><b>Figure 2.</b> Overview of the proposed framework.</p>
 
@@ -130,30 +130,6 @@ GZSL/
 ---
 
 ## Training
-
-### Configuration
-
-Edit `config/config.yaml` to customize training:
-
-```yaml
-dataset:
-  name: ntu60
-  data_dir: data/ntu60/
-
-training:
-  batch_size: 32
-  num_epochs: 100
-  learning_rate: 0.001
-  weight_decay: 0.0001
-
-model:
-  feature_dim: 256
-  num_parts: 6
-  lambda_p: 1.0
-  lambda_g: 1.0
-  lambda_c: 0.5
-  lambda_i: 0.3
-```
 
 ### Expected Results
 
