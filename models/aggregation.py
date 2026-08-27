@@ -14,7 +14,7 @@ class PrimitiveAggregation(nn.Module):
     using attention-weighted aggregation
     """
     
-    def __init__(self, feature_dim: int = 256, num_parts: int = 6):
+    def __init__(self, feature_dim: int = 512, num_parts: int = 6):
         """
         Args:
             feature_dim: Feature dimension
@@ -272,9 +272,9 @@ class AlignmentLoss(nn.Module):
 
 if __name__ == "__main__":
     # Test aggregation module
-    aggregation = PrimitiveAggregation(feature_dim=256, num_parts=6)
+    aggregation = PrimitiveAggregation(feature_dim=512, num_parts=6)
     
-    # Dummy input
+    # Example input
     B, P, D = 4, 6, 256
     part_features = torch.randn(B, P, D)
     

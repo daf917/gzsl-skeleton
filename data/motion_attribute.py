@@ -24,12 +24,12 @@ from typing import Tuple, Dict, List
 # Body part partitioning based on human topology priors
 # Each part contains indices of joints from the standard skeleton
 PART_JOINTS = {
-    0: [0, 1, 2, 3, 4],       # Head: nose, neck, head_left, head_right, head_top
-    1: [5, 6, 7, 8, 9, 10],   # Torso: spine1, spine2, spine3, hip_left, hip_right
-    2: [11, 12, 13, 14, 15], # Left Arm: shoulder_left, elbow_left, wrist_left, hand_left
-    3: [16, 17, 18, 19, 20], # Right Arm: shoulder_right, elbow_right, wrist_right, hand_right
-    4: [21, 22, 23, 24],     # Left Leg: hip_left, knee_left, ankle_left, foot_left
-    5: [25, 26, 27, 28],     # Right Leg: hip_right, knee_right, ankle_right, foot_right
+    0: [2, 3, 20],              # Head/neck in NTU RGB+D 25-joint format
+    1: [0, 1, 2, 12, 16, 20],   # Torso and hips
+    2: [4, 5, 6, 7, 21, 22],    # Left arm and hand tips
+    3: [8, 9, 10, 11, 23, 24],  # Right arm and hand tips
+    4: [12, 13, 14, 15],        # Left leg
+    5: [16, 17, 18, 19],        # Right leg
 }
 
 
@@ -361,12 +361,12 @@ def create_part_joint_mapping(num_joints: int) -> Dict[int, List[int]]:
     elif num_joints == 17:
         # COCO format
         return {
-            0: [0, 1, 2, 3, 4],       # Head
-            1: [5, 6, 7, 8, 9, 10],   # Torso
-            2: [5, 6, 7],             # Left Arm
-            3: [11, 12, 13],          # Right Arm
-            4: [5, 14, 15, 16],       # Left Leg
-            5: [5, 11, 12, 13],       # Right Leg (corrected)
+            0: [0, 1, 2, 3, 4],    # Head
+            1: [5, 6, 11, 12],     # Torso
+            2: [5, 7, 9],          # Left arm
+            3: [6, 8, 10],         # Right arm
+            4: [11, 13, 15],       # Left leg
+            5: [12, 14, 16],       # Right leg
         }
     else:
         # Generic mapping - divide joints evenly
@@ -383,7 +383,7 @@ if __name__ == "__main__":
     # Test the motion attribute extractor
     extractor = MotionAttributeExtractor(num_parts=6)
     
-    # Create dummy skeleton sequence (T=30 frames, J=25 joints)
+    # Create an example skeleton sequence (T=30 frames, J=25 joints)
     skeleton = torch.randn(30, 25, 3)  # 3D coordinates
     
     # Compute attributes

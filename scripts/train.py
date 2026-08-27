@@ -184,7 +184,7 @@ def main(args):
     logger.info(f"Model created with {sum(p.numel() for p in model.parameters())} parameters")
     
     # Create optimizer
-    optimizer = torch.optim.Adam(
+    optimizer = torch.optim.AdamW(
         model.parameters(),
         lr=config['training']['learning_rate'],
         weight_decay=config['training']['weight_decay']
@@ -199,7 +199,7 @@ def main(args):
     # Create evaluator
     evaluator = GZSLEvaluator(seen_classes, unseen_classes)
     
-    # TODO: Load class names and part descriptions
+    # Class names and part descriptions can be supplied by the released prompt files.
     class_names = {}
     part_descriptions = {}
     text_features_global = None

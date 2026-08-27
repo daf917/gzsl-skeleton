@@ -1,0 +1,61 @@
+class_id,one_based_label,name,set
+0,1,drink water,seen
+1,2,eat meal/snack,seen
+2,3,brushing teeth,seen
+4,5,drop,seen
+6,7,throw,seen
+7,8,sitting down,seen
+8,9,standing up from sitting position,seen
+9,10,clapping,seen
+10,11,reading,seen
+11,12,writing,seen
+12,13,tear up paper,seen
+14,15,take off jacket,seen
+15,16,wear a shoe,seen
+16,17,take off a shoe,seen
+17,18,wear on glasses,seen
+18,19,take off glasses,seen
+19,20,put on a hat/cap,seen
+20,21,take off a hat/cap,seen
+21,22,cheer up,seen
+22,23,hand waving,seen
+23,24,kicking something,seen
+24,25,reach into pocket,seen
+25,26,hopping one foot jumping,seen
+26,27,jump up,seen
+27,28,make a phone call/answer phone,seen
+28,29,playing with phone/tablet,seen
+29,30,typing on a keyboard,seen
+30,31,pointing to something with finger,seen
+31,32,taking a selfie,seen
+32,33,check time from watch,seen
+33,34,rub two hands together,seen
+34,35,nod head/bow,seen
+35,36,shake head,seen
+36,37,wipe face,seen
+37,38,salute,seen
+38,39,put the palms together,seen
+39,40,cross hands in front,seen
+40,41,sneeze/cough,seen
+41,42,staggering,seen
+42,43,falling,seen
+43,44,touch head,seen
+44,45,touch chest,seen
+45,46,touch back,seen
+47,48,nausea or vomiting condition,seen
+48,49,use a fan,seen
+49,50,punching/slapping other person,seen
+50,51,kicking other person,seen
+51,52,pushing other person,seen
+52,53,pat on back of other person,seen
+53,54,point finger at the other person,seen
+54,55,hugging other person,seen
+55,56,giving something to other person,seen
+56,57,touch other person's pocket,seen
+57,58,handshaking,seen
+58,59,walking towards each other,seen
+3,4,brushing hair,unseen
+5,6,pickup,unseen
+13,14,wear jacket,unseen
+46,47,touch neck,unseen
+59,60,walking apart from each other,unseen

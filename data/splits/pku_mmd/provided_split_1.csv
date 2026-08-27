@@ -1,0 +1,52 @@
+class_id,one_based_label,name,set
+0,1,bow,seen
+1,2,brushing teeth,seen
+2,3,check time,seen
+3,4,cheer up,seen
+4,5,clean,seen
+5,6,clapping,seen
+6,7,drink,seen
+8,9,fall,seen
+9,10,fight,seen
+10,11,give an item,seen
+11,12,hand waving,seen
+12,13,hit,seen
+14,15,kick,seen
+15,16,lie down,seen
+16,17,make a phone call,seen
+17,18,point,seen
+18,19,pose,seen
+19,20,push,seen
+20,21,put on clothes,seen
+21,22,read,seen
+22,23,ride bike,seen
+23,24,ride horse,seen
+25,26,sit down,seen
+26,27,stand up,seen
+27,28,take a photo,seen
+28,29,take off clothes,seen
+29,30,throw,seen
+30,31,touch,seen
+31,32,turn left,seen
+32,33,turn right,seen
+33,34,walk,seen
+35,36,wear glasses,seen
+36,37,wear hat,seen
+37,38,wear shoes,seen
+38,39,write,seen
+39,40,yawn,seen
+40,41,salute,seen
+41,42,cross hands,seen
+42,43,touch head,seen
+43,44,touch chest,seen
+44,45,touch back,seen
+45,46,touch neck,seen
+46,47,nausea/vomiting,seen
+47,48,hop,seen
+48,49,jump,seen
+50,51,put on/take off cap,seen
+7,8,eat,unseen
+13,14,hug,unseen
+24,25,run,unseen
+34,35,wave goodbye,unseen
+49,50,shake hands,unseen

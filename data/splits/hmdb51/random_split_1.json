@@ -1,0 +1,269 @@
+{
+  "dataset": "hmdb51",
+  "protocol": "3-split random",
+  "split_index": 1,
+  "seed": 20260825,
+  "index_base": 0,
+  "num_classes": 51,
+  "seen_count": 31,
+  "unseen_count": 20,
+  "seen_classes": [
+    {
+      "class_id": 0,
+      "one_based_label": 1,
+      "name": "brush_hair"
+    },
+    {
+      "class_id": 2,
+      "one_based_label": 3,
+      "name": "catch"
+    },
+    {
+      "class_id": 3,
+      "one_based_label": 4,
+      "name": "chew"
+    },
+    {
+      "class_id": 4,
+      "one_based_label": 5,
+      "name": "clap"
+    },
+    {
+      "class_id": 6,
+      "one_based_label": 7,
+      "name": "climb_stairs"
+    },
+    {
+      "class_id": 7,
+      "one_based_label": 8,
+      "name": "dive"
+    },
+    {
+      "class_id": 8,
+      "one_based_label": 9,
+      "name": "draw_sword"
+    },
+    {
+      "class_id": 9,
+      "one_based_label": 10,
+      "name": "dribble"
+    },
+    {
+      "class_id": 10,
+      "one_based_label": 11,
+      "name": "drink"
+    },
+    {
+      "class_id": 11,
+      "one_based_label": 12,
+      "name": "eat"
+    },
+    {
+      "class_id": 13,
+      "one_based_label": 14,
+      "name": "fencing"
+    },
+    {
+      "class_id": 14,
+      "one_based_label": 15,
+      "name": "flic_flac"
+    },
+    {
+      "class_id": 17,
+      "one_based_label": 18,
+      "name": "hit"
+    },
+    {
+      "class_id": 22,
+      "one_based_label": 23,
+      "name": "kiss"
+    },
+    {
+      "class_id": 23,
+      "one_based_label": 24,
+      "name": "laugh"
+    },
+    {
+      "class_id": 25,
+      "one_based_label": 26,
+      "name": "pour"
+    },
+    {
+      "class_id": 27,
+      "one_based_label": 28,
+      "name": "punch"
+    },
+    {
+      "class_id": 28,
+      "one_based_label": 29,
+      "name": "push"
+    },
+    {
+      "class_id": 29,
+      "one_based_label": 30,
+      "name": "pushup"
+    },
+    {
+      "class_id": 33,
+      "one_based_label": 34,
+      "name": "shake_hands"
+    },
+    {
+      "class_id": 34,
+      "one_based_label": 35,
+      "name": "shoot_ball"
+    },
+    {
+      "class_id": 36,
+      "one_based_label": 37,
+      "name": "shoot_gun"
+    },
+    {
+      "class_id": 37,
+      "one_based_label": 38,
+      "name": "sit"
+    },
+    {
+      "class_id": 38,
+      "one_based_label": 39,
+      "name": "situp"
+    },
+    {
+      "class_id": 41,
+      "one_based_label": 42,
+      "name": "somersault"
+    },
+    {
+      "class_id": 42,
+      "one_based_label": 43,
+      "name": "stand"
+    },
+    {
+      "class_id": 44,
+      "one_based_label": 45,
+      "name": "sword"
+    },
+    {
+      "class_id": 45,
+      "one_based_label": 46,
+      "name": "sword_exercise"
+    },
+    {
+      "class_id": 46,
+      "one_based_label": 47,
+      "name": "talk"
+    },
+    {
+      "class_id": 49,
+      "one_based_label": 50,
+      "name": "walk"
+    },
+    {
+      "class_id": 50,
+      "one_based_label": 51,
+      "name": "wave"
+    }
+  ],
+  "unseen_classes": [
+    {
+      "class_id": 1,
+      "one_based_label": 2,
+      "name": "cartwheel"
+    },
+    {
+      "class_id": 5,
+      "one_based_label": 6,
+      "name": "climb"
+    },
+    {
+      "class_id": 12,
+      "one_based_label": 13,
+      "name": "fall_floor"
+    },
+    {
+      "class_id": 15,
+      "one_based_label": 16,
+      "name": "golf"
+    },
+    {
+      "class_id": 16,
+      "one_based_label": 17,
+      "name": "handstand"
+    },
+    {
+      "class_id": 18,
+      "one_based_label": 19,
+      "name": "hug"
+    },
+    {
+      "class_id": 19,
+      "one_based_label": 20,
+      "name": "jump"
+    },
+    {
+      "class_id": 20,
+      "one_based_label": 21,
+      "name": "kick"
+    },
+    {
+      "class_id": 21,
+      "one_based_label": 22,
+      "name": "kick_ball"
+    },
+    {
+      "class_id": 24,
+      "one_based_label": 25,
+      "name": "pick"
+    },
+    {
+      "class_id": 26,
+      "one_based_label": 27,
+      "name": "pullup"
+    },
+    {
+      "class_id": 30,
+      "one_based_label": 31,
+      "name": "ride_bike"
+    },
+    {
+      "class_id": 31,
+      "one_based_label": 32,
+      "name": "ride_horse"
+    },
+    {
+      "class_id": 32,
+      "one_based_label": 33,
+      "name": "run"
+    },
+    {
+      "class_id": 35,
+      "one_based_label": 36,
+      "name": "shoot_bow"
+    },
+    {
+      "class_id": 39,
+      "one_based_label": 40,
+      "name": "smile"
+    },
+    {
+      "class_id": 40,
+      "one_based_label": 41,
+      "name": "smoke"
+    },
+    {
+      "class_id": 43,
+      "one_based_label": 44,
+      "name": "swing_baseball"
+    },
+    {
+      "class_id": 47,
+      "one_based_label": 48,
+      "name": "throw"
+    },
+    {
+      "class_id": 48,
+      "one_based_label": 49,
+      "name": "turn"
+    }
+  ]
+}

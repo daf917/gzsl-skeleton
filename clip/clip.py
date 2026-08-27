@@ -103,7 +103,7 @@ def load(name: str, device: Union[str, torch.device] = "cuda" if torch.cuda.is_a
         The device to put the loaded model
 
     jit : bool
-        Whether to load the optimized JIT model or more hackable non-JIT model (default).
+        Whether to load the optimized JIT model or the more editable non-JIT model (default).
 
     download_root: str
         path to download the model files; by default, it uses "~/.cache/clip"

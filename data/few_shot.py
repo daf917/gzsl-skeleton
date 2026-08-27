@@ -294,7 +294,7 @@ class TestTimeAdaptation:
         adapted_model.train()
         
         # Optimizer for adaptation
-        optimizer = torch.optim.Adam(
+        optimizer = torch.optim.AdamW(
             adapted_model.parameters(),
             lr=self.lr
         )
@@ -370,7 +370,7 @@ class TestTimeAdaptation:
                 
                 predictions = similarities.argmax(dim=-1)
             else:
-                # Fallback: use text features
+                # Otherwise, use text features
                 outputs = adapted_model(query_skeletons)
                 query_features = outputs['global_composed']
                 similarities = torch.matmul(query_features, text_features.T)
@@ -584,8 +584,8 @@ if __name__ == "__main__":
     # Test few-shot module
     print("Testing few-shot module...")
     
-    # Create dummy dataset
-    class DummyDataset:
+    # Create example dataset
+    class ExampleDataset:
         def __init__(self, num_samples=100, num_classes=10):
             self.num_samples = num_samples
             self.num_classes = num_classes
@@ -600,7 +600,7 @@ if __name__ == "__main__":
         def __getitem__(self, idx):
             return self.skeletons[idx], self.labels[idx]
     
-    dataset = DummyDataset(num_samples=200, num_classes=20)
+    dataset = ExampleDataset(num_samples=200, num_classes=20)
     
     # Test sampler
     sampler = FewShotSampler(

@@ -1,0 +1,602 @@
+[
+  {
+    "class_id": 0,
+    "action_class": "drink water",
+    "head": "The head remains stable with slight nodding.",
+    "torso": "The torso remains stable with minor sway.",
+    "left_arm": "The left arm bends at the elbow and moves toward the face.",
+    "right_arm": "The right arm remains stable with slight flexion.",
+    "left_leg": "The left leg remains stable with minor flexion.",
+    "right_leg": "The right leg remains stable with minor flexion."
+  },
+  {
+    "class_id": 1,
+    "action_class": "eat meal/snack",
+    "head": "The head tilts slightly to the left.",
+    "torso": "The torso remains stable and upright.",
+    "left_arm": "The left arm swings repeatedly towards the mouth.",
+    "right_arm": "The right arm swings repeatedly towards the mouth.",
+    "left_leg": "The left leg remains stable with minor stance oscillation.",
+    "right_leg": "The right leg remains stable with minor stance oscillation."
+  },
+  {
+    "class_id": 2,
+    "action_class": "brushing teeth",
+    "head": "The head remains stable with slight head nodding.",
+    "torso": "The torso is stable with minor upper body swaying.",
+    "left_arm": "The left arm stays near the lower face with repeated small wrist motion.",
+    "right_arm": "The right arm stays near the lower face with repeated small wrist motion.",
+    "left_leg": "The left leg is in a stable stance with minor knee flexion.",
+    "right_leg": "The right leg is in a stable stance with minor knee flexion."
+  },
+  {
+    "class_id": 3,
+    "action_class": "brushing hair",
+    "head": "The head tilts slightly to the left.",
+    "torso": "The torso remains stable with minor sway.",
+    "left_arm": "The left arm flexes repeatedly near the head region.",
+    "right_arm": "The right arm flexes repeatedly near the head region.",
+    "left_leg": "The left leg remains stable with minor sway.",
+    "right_leg": "The right leg remains stable with minor sway."
+  },
+  {
+    "class_id": 4,
+    "action_class": "drop",
+    "head": "The head remains stable with slight nodding.",
+    "torso": "The torso remains stable with minor sway.",
+    "left_arm": "The left arm extends downward with slight flexion.",
+    "right_arm": "The right arm extends downward with slight flexion.",
+    "left_leg": "The left leg extends downward with slight flexion.",
+    "right_leg": "The right leg extends downward with slight flexion."
+  },
+  {
+    "class_id": 5,
+    "action_class": "pickup",
+    "head": "The head remains stable with slight nodding.",
+    "torso": "The torso bends forward slightly, maintaining a straight spine.",
+    "left_arm": "The left arm extends forward, maintaining a straight posture.",
+    "right_arm": "The right arm extends forward, maintaining a straight posture.",
+    "left_leg": "The left leg bends at the knee, with slight flexion and extension.",
+    "right_leg": "The right leg bends at the knee, with slight flexion and extension."
+  },
+  {
+    "class_id": 6,
+    "action_class": "throw",
+    "head": "The head turns slightly to the side.",
+    "torso": "The torso rotates and bends forward.",
+    "left_arm": "The left arm extends forward and then swings back.",
+    "right_arm": "The right arm extends forward and then swings back.",
+    "left_leg": "The left leg extends forward and then swings back.",
+    "right_leg": "The right leg extends forward and then swings back."
+  },
+  {
+    "class_id": 7,
+    "action_class": "sitting down",
+    "head": "The head remains stable with slight nodding.",
+    "torso": "The torso is upright with minimal movement.",
+    "left_arm": "The left arm rests on the lap with slight flexion.",
+    "right_arm": "The right arm rests on the lap with slight flexion.",
+    "left_leg": "The left leg is extended with a stable stance.",
+    "right_leg": "The right leg is extended with a stable stance."
+  },
+  {
+    "class_id": 8,
+    "action_class": "standing up from sitting position",
+    "head": "The head rotates slightly forward and upward.",
+    "torso": "The torso bends forward and then extends upward.",
+    "left_arm": "The left arm extends forward and then bends downward.",
+    "right_arm": "The right arm extends forward and then bends downward.",
+    "left_leg": "The left leg extends forward and then bends downward.",
+    "right_leg": "The right leg extends forward and then bends downward."
+  },
+  {
+    "class_id": 9,
+    "action_class": "clapping",
+    "head": "The head remains stable with slight tilt.",
+    "torso": "The torso remains stable with minor sway.",
+    "left_arm": "The left arm bends and extends rhythmically.",
+    "right_arm": "The right arm bends and extends rhythmically.",
+    "left_leg": "The left leg remains stable with minor flexion.",
+    "right_leg": "The right leg remains stable with minor flexion."
+  },
+  {
+    "class_id": 10,
+    "action_class": "reading",
+    "head": "The head slightly sways from side to side.",
+    "torso": "The torso remains stable with minimal movement.",
+    "left_arm": "The left arm extends forward and then returns to the side.",
+    "right_arm": "The right arm extends forward and then returns to the side.",
+    "left_leg": "The left leg remains stable with minimal movement.",
+    "right_leg": "The right leg remains stable with minimal movement."
+  },
+  {
+    "class_id": 11,
+    "action_class": "writing",
+    "head": "The head remains stable with slight nodding.",
+    "torso": "The torso remains stable with minor sway.",
+    "left_arm": "The left arm extends forward with slight flexion.",
+    "right_arm": "The right arm extends forward with slight flexion.",
+    "left_leg": "The left leg remains stable with minor flexion.",
+    "right_leg": "The right leg remains stable with minor flexion."
+  },
+  {
+    "class_id": 12,
+    "action_class": "tear up paper",
+    "head": "The head remains stable with slight nodding.",
+    "torso": "The torso remains stable with minor sway.",
+    "left_arm": "The left arm bends and extends rhythmically.",
+    "right_arm": "The right arm bends and extends rhythmically.",
+    "left_leg": "The left leg remains stable with minor flexion.",
+    "right_leg": "The right leg remains stable with minor flexion."
+  },
+  {
+    "class_id": 13,
+    "action_class": "wear jacket",
+    "head": "The head remains stable with slight nodding.",
+    "torso": "The torso shows minimal movement, slightly swaying.",
+    "left_arm": "The left arm extends forward, bending at the elbow.",
+    "right_arm": "The right arm extends forward, bending at the elbow.",
+    "left_leg": "The left leg remains stable, slightly flexing at the knee.",
+    "right_leg": "The right leg remains stable, slightly flexing at the knee."
+  },
+  {
+    "class_id": 14,
+    "action_class": "take off jacket",
+    "head": "The head remains stable with slight nodding.",
+    "torso": "The torso remains stable with minor sway.",
+    "left_arm": "The left arm extends outward with slight flexion.",
+    "right_arm": "The right arm extends outward with slight flexion.",
+    "left_leg": "The left leg remains stable with minor flexion.",
+    "right_leg": "The right leg remains stable with minor flexion."
+  },
+  {
+    "class_id": 15,
+    "action_class": "wear a shoe",
+    "head": "The head remains stable with slight nodding.",
+    "torso": "The torso remains stable with minor sway.",
+    "left_arm": "The left arm remains stable with slight flexion and extension.",
+    "right_arm": "The right arm remains stable with minor rotation and extension.",
+    "left_leg": "The left leg remains stable with slight flexion and extension.",
+    "right_leg": "The right leg remains stable with slight rotation and extension."
+  },
+  {
+    "class_id": 16,
+    "action_class": "take off a shoe",
+    "head": "The head remains stable with slight nodding.",
+    "torso": "The torso remains stable, slightly swaying.",
+    "left_arm": "The left arm extends forward, bending at the elbow.",
+    "right_arm": "The right arm extends forward, bending at the elbow.",
+    "left_leg": "The left leg bends at the knee, lifting the foot slightly.",
+    "right_leg": "The right leg bends at the knee, lifting the foot slightly."
+  },
+  {
+    "class_id": 17,
+    "action_class": "wear on glasses",
+    "head": "The head remains stable with slight head nods.",
+    "torso": "The torso remains stable with minimal movement.",
+    "left_arm": "The left arm remains stable with slight hand movements.",
+    "right_arm": "The right arm remains stable with slight hand movements.",
+    "left_leg": "The left leg remains stable with minimal movement.",
+    "right_leg": "The right leg remains stable with minimal movement."
+  },
+  {
+    "class_id": 18,
+    "action_class": "take off glasses",
+    "head": "The head slightly tilts downward and rotates to the left.",
+    "torso": "The torso remains stable with minor sway.",
+    "left_arm": "The left arm extends forward with a slight bend at the elbow.",
+    "right_arm": "The right arm extends forward with a slight bend at the elbow.",
+    "left_leg": "The left leg remains stable with minor sway.",
+    "right_leg": "The right leg remains stable with minor sway."
+  },
+  {
+    "class_id": 19,
+    "action_class": "put on a hat/cap",
+    "head": "The head slightly tilts upward and turns to the side.",
+    "torso": "The torso remains stable with minor rotation.",
+    "left_arm": "The left arm extends forward and slightly bends at the elbow.",
+    "right_arm": "The right arm extends forward and slightly bends at the elbow.",
+    "left_leg": "The left leg remains stable with minor knee flexion.",
+    "right_leg": "The right leg remains stable with minor knee flexion."
+  },
+  {
+    "class_id": 20,
+    "action_class": "take off a hat/cap",
+    "head": "The head tilts downward slightly.",
+    "torso": "The torso remains stable with minor sway.",
+    "left_arm": "The left arm extends forward with slight rotation.",
+    "right_arm": "The right arm extends forward with slight rotation.",
+    "left_leg": "The left leg remains stable with minor flexion.",
+    "right_leg": "The right leg remains stable with minor flexion."
+  },
+  {
+    "class_id": 21,
+    "action_class": "cheer up",
+    "head": "The head rotates slightly from side to side.",
+    "torso": "The torso sways gently side to side.",
+    "left_arm": "The left arm extends forward and bends at the elbow.",
+    "right_arm": "The right arm mirrors the left arm's movements, extending and bending.",
+    "left_leg": "The left leg bends and extends in a rhythmic fashion.",
+    "right_leg": "The right leg mirrors the left leg's movements, bending and extending."
+  },
+  {
+    "class_id": 22,
+    "action_class": "hand waving",
+    "head": "The head remains stable with slight tilt.",
+    "torso": "The torso remains stable with minor sway.",
+    "left_arm": "The left arm extends and rotates slightly.",
+    "right_arm": "The right arm extends and rotates slightly.",
+    "left_leg": "The left leg remains stable with minor flexion.",
+    "right_leg": "The right leg remains stable with minor flexion."
+  },
+  {
+    "class_id": 23,
+    "action_class": "kicking something",
+    "head": "The head remains stable with slight nodding.",
+    "torso": "The torso remains stable with minor sway.",
+    "left_arm": "The left arm extends forward with slight flexion.",
+    "right_arm": "The right arm extends backward with slight extension.",
+    "left_leg": "The left leg extends forward with minor flexion.",
+    "right_leg": "The right leg extends backward with slight extension."
+  },
+  {
+    "class_id": 24,
+    "action_class": "reach into pocket",
+    "head": "The head remains stable with slight nodding.",
+    "torso": "The torso remains stable with minor sway.",
+    "left_arm": "The left arm extends forward with slight flexion.",
+    "right_arm": "The right arm extends forward with slight flexion.",
+    "left_leg": "The left leg remains stable with minor flexion.",
+    "right_leg": "The right leg remains stable with minor flexion."
+  },
+  {
+    "class_id": 25,
+    "action_class": "hopping one foot jumping",
+    "head": "The head remains stable with slight nodding.",
+    "torso": "The torso sways slightly, maintaining a neutral position.",
+    "left_arm": "The left arm swings forward and back in a rhythmic motion.",
+    "right_arm": "The right arm swings forward and back in a rhythmic motion.",
+    "left_leg": "The left leg lifts and then returns to a stable stance.",
+    "right_leg": "The right leg lifts and then returns to a stable stance."
+  },
+  {
+    "class_id": 26,
+    "action_class": "jump up",
+    "head": "The head is slightly tilted back and rotated upward.",
+    "torso": "The torso is bent forward and then extends upward.",
+    "left_arm": "The left arm is bent at the elbow and extends upward.",
+    "right_arm": "The right arm is bent at the elbow and extends upward.",
+    "left_leg": "The left leg is bent at the knee and extends upward.",
+    "right_leg": "The right leg is bent at the knee and extends upward."
+  },
+  {
+    "class_id": 27,
+    "action_class": "make a phone call/answer phone",
+    "head": "The head remains stable with slight nodding.",
+    "torso": "The torso remains stable with minor sway.",
+    "left_arm": "The left arm flexes at the elbow while the hand moves near the ear.",
+    "right_arm": "The right arm remains mostly stable with weak elbow flexion and minimal wrist displacement.",
+    "left_leg": "The left leg is stable with slight flexion.",
+    "right_leg": "The right leg is stable with minor oscillation."
+  },
+  {
+    "class_id": 28,
+    "action_class": "playing with phone/tablet",
+    "head": "The head slightly tilts downward and rotates subtly.",
+    "torso": "The torso remains stable with minor sway.",
+    "left_arm": "The left arm stays forward with small wrist rotation and flexion.",
+    "right_arm": "The right arm stays forward with small wrist rotation and flexion.",
+    "left_leg": "The left leg remains stable with minor sway.",
+    "right_leg": "The right leg remains stable with minor sway."
+  },
+  {
+    "class_id": 29,
+    "action_class": "typing on a keyboard",
+    "head": "The head remains stable with slight head nodding.",
+    "torso": "The torso is stable with minimal movement.",
+    "left_arm": "The left arm is extended forward with small repeated wrist and finger motion.",
+    "right_arm": "The right arm is extended forward with small repeated wrist and finger motion.",
+    "left_leg": "The left leg is stable with slight movement.",
+    "right_leg": "The right leg is stable with slight movement."
+  },
+  {
+    "class_id": 30,
+    "action_class": "pointing to something with finger",
+    "head": "The head turns slightly to the side.",
+    "torso": "The torso remains stable with minimal movement.",
+    "left_arm": "The left arm extends forward with the hand pointing.",
+    "right_arm": "The right arm remains by the side with weak motion.",
+    "left_leg": "The left leg remains stable with weak motion.",
+    "right_leg": "The right leg remains stable with weak motion."
+  },
+  {
+    "class_id": 31,
+    "action_class": "taking a selfie",
+    "head": "The head rotates slightly to the side.",
+    "torso": "The torso remains stable with minimal movement.",
+    "left_arm": "The left arm extends forward and slightly upward.",
+    "right_arm": "The right arm extends forward and slightly upward.",
+    "left_leg": "The left leg remains stable with minimal movement.",
+    "right_leg": "The right leg remains stable with minimal movement."
+  },
+  {
+    "class_id": 32,
+    "action_class": "check time from watch",
+    "head": "The head remains stable with slight nodding.",
+    "torso": "The torso remains stable with minor sway.",
+    "left_arm": "The left arm remains stable with slight flexion and extension.",
+    "right_arm": "The right arm remains stable with minor rotation and extension.",
+    "left_leg": "The left leg remains stable with slight flexion and extension.",
+    "right_leg": "The right leg remains stable with slight flexion and extension."
+  },
+  {
+    "class_id": 33,
+    "action_class": "rub two hands together",
+    "head": "The head remains stable with slight tilt.",
+    "torso": "The torso remains stable with minor sway.",
+    "left_arm": "The left arm bends and extends rhythmically.",
+    "right_arm": "The right arm bends and extends rhythmically.",
+    "left_leg": "The left leg remains stable with minor flexion.",
+    "right_leg": "The right leg remains stable with minor flexion."
+  },
+  {
+    "class_id": 34,
+    "action_class": "nod head/bow",
+    "head": "The head tilts downward slightly.",
+    "torso": "The torso remains stable with minor sway.",
+    "left_arm": "The left arm hangs loosely with slight flexion.",
+    "right_arm": "The right arm hangs loosely with slight flexion.",
+    "left_leg": "The left leg remains stable with minor sway.",
+    "right_leg": "The right leg remains stable with minor sway."
+  },
+  {
+    "class_id": 35,
+    "action_class": "shake head",
+    "head": "The head rotates from side to side.",
+    "torso": "The torso remains mostly stable with minor sway and limited rotational motion.",
+    "left_arm": "The left arm is relaxed and stationary.",
+    "right_arm": "The right arm is relaxed and stationary.",
+    "left_leg": "The left leg is stable with slight movement.",
+    "right_leg": "The right leg is stable with slight movement."
+  },
+  {
+    "class_id": 36,
+    "action_class": "wipe face",
+    "head": "The head slightly sways to the side.",
+    "torso": "The torso remains stable and upright.",
+    "left_arm": "The left arm extends forward and then moves downward.",
+    "right_arm": "The right arm extends forward and then moves downward.",
+    "left_leg": "The left leg remains stable and slightly bent.",
+    "right_leg": "The right leg remains stable and slightly bent."
+  },
+  {
+    "class_id": 37,
+    "action_class": "salute",
+    "head": "The head turns slightly upward and to the side.",
+    "torso": "The torso remains stable with slight rotation.",
+    "left_arm": "The left arm extends upward and slightly forward, bending at the elbow.",
+    "right_arm": "The right arm extends upward and slightly forward, bending at the elbow.",
+    "left_leg": "The left leg remains stable with slight bending at the knee.",
+    "right_leg": "The right leg remains stable with slight bending at the knee."
+  },
+  {
+    "class_id": 38,
+    "action_class": "put the palms together",
+    "head": "The head remains stable with slight nodding.",
+    "torso": "The torso remains stable with minor sway.",
+    "left_arm": "The left arm bends at the elbow and moves towards the right arm with slight rotation.",
+    "right_arm": "The right arm bends at the elbow and moves towards the left arm with slight rotation.",
+    "left_leg": "The left leg remains stable with minor flexion and extension.",
+    "right_leg": "The right leg remains stable with minor flexion and extension."
+  },
+  {
+    "class_id": 39,
+    "action_class": "cross hands in front",
+    "head": "The head remains stable with slight nodding.",
+    "torso": "The torso remains stable with minor sway.",
+    "left_arm": "The left arm bends and extends in front with rhythmic motion.",
+    "right_arm": "The right arm bends and extends in front with rhythmic motion.",
+    "left_leg": "The left leg remains stable with minor flexion and extension.",
+    "right_leg": "The right leg remains stable with minor flexion and extension."
+  },
+  {
+    "class_id": 40,
+    "action_class": "sneeze/cough",
+    "head": "The head tilts back and rotates sharply.",
+    "torso": "The torso extends forward and rotates slightly.",
+    "left_arm": "The left arm extends forward and bends at the elbow.",
+    "right_arm": "The right arm extends forward and bends at the elbow.",
+    "left_leg": "The left leg extends forward and bends at the knee.",
+    "right_leg": "The right leg extends forward and bends at the knee."
+  },
+  {
+    "class_id": 41,
+    "action_class": "staggering",
+    "head": "The head sways slightly from side to side.",
+    "torso": "The torso sways slightly from side to side.",
+    "left_arm": "The left arm swings back and forth in a rhythmic motion.",
+    "right_arm": "The right arm swings back and forth in a rhythmic motion.",
+    "left_leg": "The left leg swings back and forth in a rhythmic motion.",
+    "right_leg": "The right leg swings back and forth in a rhythmic motion."
+  },
+  {
+    "class_id": 42,
+    "action_class": "falling",
+    "head": "The head rotates downward and to the side.",
+    "torso": "The torso bends forward and downward.",
+    "left_arm": "The left arm extends forward and downward.",
+    "right_arm": "The right arm extends forward and downward.",
+    "left_leg": "The left leg extends forward and downward.",
+    "right_leg": "The right leg extends forward and downward."
+  },
+  {
+    "class_id": 43,
+    "action_class": "touch head",
+    "head": "The head slightly tilts to touch the head.",
+    "torso": "The torso remains stable and upright.",
+    "left_arm": "The left arm extends forward and slightly bends at the elbow.",
+    "right_arm": "The right arm extends forward and slightly bends at the elbow.",
+    "left_leg": "The left leg remains stable and slightly flexes at the knee.",
+    "right_leg": "The right leg remains stable and slightly flexes at the knee."
+  },
+  {
+    "class_id": 44,
+    "action_class": "touch chest",
+    "head": "The head remains stable with slight nodding.",
+    "torso": "The torso remains stable with minor sway.",
+    "left_arm": "The left arm bends slightly towards the chest with minor rotation.",
+    "right_arm": "The right arm bends slightly towards the chest with minor rotation.",
+    "left_leg": "The left leg remains stable with minor flexion.",
+    "right_leg": "The right leg remains stable with minor flexion."
+  },
+  {
+    "class_id": 45,
+    "action_class": "touch back",
+    "head": "The head remains stable with slight nodding.",
+    "torso": "The torso remains stable with minor sway.",
+    "left_arm": "The left arm extends towards the back with slight rotation.",
+    "right_arm": "The right arm extends towards the back with slight rotation.",
+    "left_leg": "The left leg remains stable with minor flexion.",
+    "right_leg": "The right leg remains stable with minor flexion."
+  },
+  {
+    "class_id": 46,
+    "action_class": "touch neck",
+    "head": "The head slightly tilts to the side.",
+    "torso": "The torso remains stable with minimal movement.",
+    "left_arm": "The left arm extends towards the neck.",
+    "right_arm": "The right arm extends towards the neck.",
+    "left_leg": "The left leg remains stable with minimal movement.",
+    "right_leg": "The right leg remains stable with minimal movement."
+  },
+  {
+    "class_id": 47,
+    "action_class": "nausea or vomiting condition",
+    "head": "The head rotates and tilts.",
+    "torso": "The torso sways and twists.",
+    "left_arm": "The left arm extends and bends.",
+    "right_arm": "The right arm extends and bends.",
+    "left_leg": "The left leg bends and extends.",
+    "right_leg": "The right leg bends and extends."
+  },
+  {
+    "class_id": 48,
+    "action_class": "use a fan",
+    "head": "The head remains stable with slight nodding.",
+    "torso": "The torso remains stable with minor sway.",
+    "left_arm": "The left arm extends forward with slight flexion.",
+    "right_arm": "The right arm extends forward with slight flexion.",
+    "left_leg": "The left leg remains stable with minor flexion.",
+    "right_leg": "The right leg remains stable with minor flexion."
+  },
+  {
+    "class_id": 49,
+    "action_class": "punching/slapping other person",
+    "head": "The head turns sharply to the side.",
+    "torso": "The torso sways slightly.",
+    "left_arm": "The left arm extends forward with a punch.",
+    "right_arm": "The right arm extends forward with a punch.",
+    "left_leg": "The left leg remains stable with minor knee flexion.",
+    "right_leg": "The right leg remains stable with minor knee flexion."
+  },
+  {
+    "class_id": 50,
+    "action_class": "kicking other person",
+    "head": "The head remains stable with slight nodding.",
+    "torso": "The torso remains stable with minor sway.",
+    "left_arm": "The left arm extends forward with slight flexion.",
+    "right_arm": "The right arm extends backward with slight extension.",
+    "left_leg": "The left leg extends forward with minor flexion.",
+    "right_leg": "The right leg extends backward with slight extension."
+  },
+  {
+    "class_id": 51,
+    "action_class": "pushing other person",
+    "head": "The head remains stable with slight nodding.",
+    "torso": "The torso shifts slightly forward, maintaining a straight posture.",
+    "left_arm": "The left arm extends forward, bending at the elbow.",
+    "right_arm": "The right arm extends forward, bending at the elbow.",
+    "left_leg": "The left leg bends slightly, with forward knee flexion.",
+    "right_leg": "The right leg bends slightly, with forward knee flexion."
+  },
+  {
+    "class_id": 52,
+    "action_class": "pat on back of other person",
+    "head": "The head remains stable with slight nodding.",
+    "torso": "The torso remains stable with minor sway.",
+    "left_arm": "The left arm extends and moves laterally with slight rotation.",
+    "right_arm": "The right arm extends and moves laterally with slight rotation.",
+    "left_leg": "The left leg remains stable with minor flexion and extension.",
+    "right_leg": "The right leg remains stable with minor flexion and extension."
+  },
+  {
+    "class_id": 53,
+    "action_class": "point finger at the other person",
+    "head": "The head turns slightly to the side.",
+    "torso": "The torso remains stable with slight rotation.",
+    "left_arm": "The left arm extends forward with the hand pointing.",
+    "right_arm": "The right arm remains stable by the side.",
+    "left_leg": "The left leg remains stable with slight movement.",
+    "right_leg": "The right leg remains stable with slight movement."
+  },
+  {
+    "class_id": 54,
+    "action_class": "hugging other person",
+    "head": "The head remains stable with slight nodding.",
+    "torso": "The torso leans forward and then slightly back.",
+    "left_arm": "The left arm moves outward and then inward across the front of the torso with a rhythmic motion.",
+    "right_arm": "The right arm moves outward and then inward across the front of the torso with a rhythmic motion.",
+    "left_leg": "The left leg maintains a stable stance with minor flexion and extension.",
+    "right_leg": "The right leg maintains a stable stance with minor flexion and extension."
+  },
+  {
+    "class_id": 55,
+    "action_class": "giving something to other person",
+    "head": "The head turns slightly to the side.",
+    "torso": "The torso remains stable with slight rotation.",
+    "left_arm": "The left arm extends forward and then bends at the elbow.",
+    "right_arm": "The right arm extends forward and then bends at the elbow.",
+    "left_leg": "The left leg remains stable with slight movement.",
+    "right_leg": "The right leg remains stable with slight movement."
+  },
+  {
+    "class_id": 56,
+    "action_class": "touch other person's pocket",
+    "head": "The head remains stable with slight nodding.",
+    "torso": "The torso shifts slightly, bending forward.",
+    "left_arm": "The left arm extends towards the right, bending at the elbow.",
+    "right_arm": "The right arm bends at the elbow, reaching towards the left, with minor wrist rotation.",
+    "left_leg": "The left leg remains stable with minor knee flexion and slight toe movement.",
+    "right_leg": "The right leg remains stable with minor knee flexion and slight ankle rotation."
+  },
+  {
+    "class_id": 57,
+    "action_class": "handshaking",
+    "head": "The head remains stable with slight nodding.",
+    "torso": "The torso remains stable with minor sway.",
+    "left_arm": "The left arm extends and retracts rhythmically with slight flexion.",
+    "right_arm": "The right arm extends and retracts rhythmically with slight flexion.",
+    "left_leg": "The left leg remains stable with minor sway.",
+    "right_leg": "The right leg remains stable with minor sway."
+  },
+  {
+    "class_id": 58,
+    "action_class": "walking towards each other",
+    "head": "The head slightly sways forward and to the side.",
+    "torso": "The torso shifts forward and slightly to the side.",
+    "left_arm": "The left arm swings forward and then back in a rhythmic motion.",
+    "right_arm": "The right arm swings forward and then back in a rhythmic motion.",
+    "left_leg": "The left leg steps forward and then back in a rhythmic motion.",
+    "right_leg": "The right leg steps forward and then back in a rhythmic motion."
+  },
+  {
+    "class_id": 59,
+    "action_class": "walking apart from each other",
+    "head": "The head slightly sways from side to side.",
+    "torso": "The torso sways gently from side to side.",
+    "left_arm": "The left arm swings forward and back rhythmically.",
+    "right_arm": "The right arm swings forward and back rhythmically.",
+    "left_leg": "The left leg steps forward and back with a steady pace.",
+    "right_leg": "The right leg steps forward and back with a steady pace."
+  }
+]

@@ -32,16 +32,20 @@ class GZSLModel(nn.Module):
         """
         super().__init__()
         
-        # Extract config
-        self.feature_dim = config.get('feature_dim', 256)
-        self.num_parts = config.get('num_parts', 6)
-        self.temperature = config.get('temperature', 0.07)
+        # Extract nested YAML config while preserving support for flat dicts.
+        model_config = config.get('model', config)
+        dataset_config = config.get('dataset', config)
+        training_config = config.get('training', config)
+
+        self.feature_dim = model_config.get('feature_dim', config.get('feature_dim', 512))
+        self.num_parts = model_config.get('num_parts', config.get('num_parts', 6))
+        self.temperature = training_config.get('temperature', config.get('temperature', 0.07))
         
         # Loss weights
-        self.lambda_p = config.get('lambda_p', 1.0)  # Primitive alignment
-        self.lambda_g = config.get('lambda_g', 1.0)  # Global alignment
-        self.lambda_c = config.get('lambda_c', 0.5)   # Consistency
-        self.lambda_i = config.get('lambda_i', 0.3)   # Independence
+        self.lambda_p = training_config.get('lambda_p', config.get('lambda_p', 1.0))  # Primitive alignment
+        self.lambda_g = training_config.get('lambda_g', config.get('lambda_g', 1.0))  # Global alignment
+        self.lambda_c = training_config.get('lambda_c', config.get('lambda_c', 0.5))   # Consistency
+        self.lambda_i = training_config.get('lambda_i', config.get('lambda_i', 0.1))   # Independence
         
         # Build components
         # Text encoder
@@ -56,18 +60,18 @@ class GZSLModel(nn.Module):
         # Skeleton encoder
         skeleton_config = config.get('skeleton_encoder', {})
         self.skeleton_encoder = SkeletonEncoder(
-            num_joints=config.get('num_joints', 25),
-            num_classes=config.get('num_classes', 60),
+            num_joints=dataset_config.get('num_joints', config.get('num_joints', 25)),
+            num_classes=dataset_config.get('num_classes', config.get('num_classes', 60)),
             feature_dim=self.feature_dim,
             num_parts=self.num_parts,
-            dropout=config.get('dropout', 0.5),
+            dropout=model_config.get('dropout', config.get('dropout', 0.5)),
             pretrained_path=skeleton_config.get('shift_gcn_pretrained', None)
         )
         
         # Motion attribute extractor
         self.motion_extractor = MotionAttributeExtractor(
             num_parts=self.num_parts,
-            temporal_window=config.get('temporal_window', 10)
+            temporal_window=model_config.get('temporal_window', config.get('temporal_window', 10))
         )
         
         # Aggregation module
@@ -376,13 +380,13 @@ class GZSLClassifier:
 if __name__ == "__main__":
     # Test GZSL model
     config = {
-        'feature_dim': 256,
+        'feature_dim': 512,
         'num_parts': 6,
         'temperature': 0.07,
         'lambda_p': 1.0,
         'lambda_g': 1.0,
         'lambda_c': 0.5,
-        'lambda_i': 0.3,
+        'lambda_i': 0.1,
         'num_joints': 25,
         'num_classes': 60,
         'dropout': 0.5,
@@ -395,7 +399,7 @@ if __name__ == "__main__":
     
     model = GZSLModel(config)
     
-    # Dummy input
+    # Example input
     B, T, J = 4, 64, 25
     skeleton = torch.randn(B, T, J, 3)
     labels = torch.tensor([0, 1, 2, 3])

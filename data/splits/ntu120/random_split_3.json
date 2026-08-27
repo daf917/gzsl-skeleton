@@ -1,0 +1,614 @@
+{
+  "dataset": "ntu120",
+  "protocol": "3-split random",
+  "split_index": 3,
+  "seed": 20260827,
+  "index_base": 0,
+  "num_classes": 120,
+  "seen_count": 110,
+  "unseen_count": 10,
+  "seen_classes": [
+    {
+      "class_id": 0,
+      "one_based_label": 1,
+      "name": "drink water"
+    },
+    {
+      "class_id": 1,
+      "one_based_label": 2,
+      "name": "eat meal/snack"
+    },
+    {
+      "class_id": 2,
+      "one_based_label": 3,
+      "name": "brushing teeth"
+    },
+    {
+      "class_id": 3,
+      "one_based_label": 4,
+      "name": "brushing hair"
+    },
+    {
+      "class_id": 4,
+      "one_based_label": 5,
+      "name": "drop"
+    },
+    {
+      "class_id": 5,
+      "one_based_label": 6,
+      "name": "pickup"
+    },
+    {
+      "class_id": 6,
+      "one_based_label": 7,
+      "name": "throw"
+    },
+    {
+      "class_id": 7,
+      "one_based_label": 8,
+      "name": "sitting down"
+    },
+    {
+      "class_id": 8,
+      "one_based_label": 9,
+      "name": "standing up from sitting position"
+    },
+    {
+      "class_id": 9,
+      "one_based_label": 10,
+      "name": "clapping"
+    },
+    {
+      "class_id": 10,
+      "one_based_label": 11,
+      "name": "reading"
+    },
+    {
+      "class_id": 11,
+      "one_based_label": 12,
+      "name": "writing"
+    },
+    {
+      "class_id": 12,
+      "one_based_label": 13,
+      "name": "tear up paper"
+    },
+    {
+      "class_id": 13,
+      "one_based_label": 14,
+      "name": "wear jacket"
+    },
+    {
+      "class_id": 14,
+      "one_based_label": 15,
+      "name": "take off jacket"
+    },
+    {
+      "class_id": 15,
+      "one_based_label": 16,
+      "name": "wear a shoe"
+    },
+    {
+      "class_id": 16,
+      "one_based_label": 17,
+      "name": "take off a shoe"
+    },
+    {
+      "class_id": 18,
+      "one_based_label": 19,
+      "name": "take off glasses"
+    },
+    {
+      "class_id": 19,
+      "one_based_label": 20,
+      "name": "put on a hat/cap"
+    },
+    {
+      "class_id": 20,
+      "one_based_label": 21,
+      "name": "take off a hat/cap"
+    },
+    {
+      "class_id": 22,
+      "one_based_label": 23,
+      "name": "hand waving"
+    },
+    {
+      "class_id": 23,
+      "one_based_label": 24,
+      "name": "kicking something"
+    },
+    {
+      "class_id": 24,
+      "one_based_label": 25,
+      "name": "reach into pocket"
+    },
+    {
+      "class_id": 25,
+      "one_based_label": 26,
+      "name": "hopping one foot jumping"
+    },
+    {
+      "class_id": 26,
+      "one_based_label": 27,
+      "name": "jump up"
+    },
+    {
+      "class_id": 27,
+      "one_based_label": 28,
+      "name": "make a phone call/answer phone"
+    },
+    {
+      "class_id": 28,
+      "one_based_label": 29,
+      "name": "playing with phone/tablet"
+    },
+    {
+      "class_id": 29,
+      "one_based_label": 30,
+      "name": "typing on a keyboard"
+    },
+    {
+      "class_id": 30,
+      "one_based_label": 31,
+      "name": "pointing to something with finger"
+    },
+    {
+      "class_id": 31,
+      "one_based_label": 32,
+      "name": "taking a selfie"
+    },
+    {
+      "class_id": 32,
+      "one_based_label": 33,
+      "name": "check time from watch"
+    },
+    {
+      "class_id": 33,
+      "one_based_label": 34,
+      "name": "rub two hands together"
+    },
+    {
+      "class_id": 34,
+      "one_based_label": 35,
+      "name": "nod head/bow"
+    },
+    {
+      "class_id": 35,
+      "one_based_label": 36,
+      "name": "shake head"
+    },
+    {
+      "class_id": 36,
+      "one_based_label": 37,
+      "name": "wipe face"
+    },
+    {
+      "class_id": 37,
+      "one_based_label": 38,
+      "name": "salute"
+    },
+    {
+      "class_id": 38,
+      "one_based_label": 39,
+      "name": "put the palms together"
+    },
+    {
+      "class_id": 39,
+      "one_based_label": 40,
+      "name": "cross hands in front"
+    },
+    {
+      "class_id": 40,
+      "one_based_label": 41,
+      "name": "sneeze/cough"
+    },
+    {
+      "class_id": 41,
+      "one_based_label": 42,
+      "name": "staggering"
+    },
+    {
+      "class_id": 42,
+      "one_based_label": 43,
+      "name": "falling"
+    },
+    {
+      "class_id": 43,
+      "one_based_label": 44,
+      "name": "touch head"
+    },
+    {
+      "class_id": 44,
+      "one_based_label": 45,
+      "name": "touch chest"
+    },
+    {
+      "class_id": 45,
+      "one_based_label": 46,
+      "name": "touch back"
+    },
+    {
+      "class_id": 46,
+      "one_based_label": 47,
+      "name": "touch neck"
+    },
+    {
+      "class_id": 50,
+      "one_based_label": 51,
+      "name": "kicking other person"
+    },
+    {
+      "class_id": 51,
+      "one_based_label": 52,
+      "name": "pushing other person"
+    },
+    {
+      "class_id": 52,
+      "one_based_label": 53,
+      "name": "pat on back of other person"
+    },
+    {
+      "class_id": 53,
+      "one_based_label": 54,
+      "name": "point finger at the other person"
+    },
+    {
+      "class_id": 54,
+      "one_based_label": 55,
+      "name": "hugging other person"
+    },
+    {
+      "class_id": 55,
+      "one_based_label": 56,
+      "name": "giving something to other person"
+    },
+    {
+      "class_id": 56,
+      "one_based_label": 57,
+      "name": "touch other person's pocket"
+    },
+    {
+      "class_id": 57,
+      "one_based_label": 58,
+      "name": "handshaking"
+    },
+    {
+      "class_id": 58,
+      "one_based_label": 59,
+      "name": "walking towards each other"
+    },
+    {
+      "class_id": 59,
+      "one_based_label": 60,
+      "name": "walking apart from each other"
+    },
+    {
+      "class_id": 60,
+      "one_based_label": 61,
+      "name": "put on headphone"
+    },
+    {
+      "class_id": 61,
+      "one_based_label": 62,
+      "name": "take off headphone"
+    },
+    {
+      "class_id": 62,
+      "one_based_label": 63,
+      "name": "shoot at the basket"
+    },
+    {
+      "class_id": 63,
+      "one_based_label": 64,
+      "name": "bounce ball"
+    },
+    {
+      "class_id": 64,
+      "one_based_label": 65,
+      "name": "tennis bat swing"
+    },
+    {
+      "class_id": 65,
+      "one_based_label": 66,
+      "name": "juggling table tennis balls"
+    },
+    {
+      "class_id": 66,
+      "one_based_label": 67,
+      "name": "hush"
+    },
+    {
+      "class_id": 67,
+      "one_based_label": 68,
+      "name": "flick hair"
+    },
+    {
+      "class_id": 68,
+      "one_based_label": 69,
+      "name": "thumb up"
+    },
+    {
+      "class_id": 69,
+      "one_based_label": 70,
+      "name": "thumb down"
+    },
+    {
+      "class_id": 70,
+      "one_based_label": 71,
+      "name": "make ok sign"
+    },
+    {
+      "class_id": 71,
+      "one_based_label": 72,
+      "name": "make victory sign"
+    },
+    {
+      "class_id": 72,
+      "one_based_label": 73,
+      "name": "staple book"
+    },
+    {
+      "class_id": 73,
+      "one_based_label": 74,
+      "name": "counting money"
+    },
+    {
+      "class_id": 74,
+      "one_based_label": 75,
+      "name": "cutting nails"
+    },
+    {
+      "class_id": 75,
+      "one_based_label": 76,
+      "name": "cutting paper using scissors"
+    },
+    {
+      "class_id": 76,
+      "one_based_label": 77,
+      "name": "snapping fingers"
+    },
+    {
+      "class_id": 77,
+      "one_based_label": 78,
+      "name": "open bottle"
+    },
+    {
+      "class_id": 78,
+      "one_based_label": 79,
+      "name": "sniff smell"
+    },
+    {
+      "class_id": 79,
+      "one_based_label": 80,
+      "name": "squat down"
+    },
+    {
+      "class_id": 82,
+      "one_based_label": 83,
+      "name": "ball up paper"
+    },
+    {
+      "class_id": 83,
+      "one_based_label": 84,
+      "name": "play magic cube"
+    },
+    {
+      "class_id": 84,
+      "one_based_label": 85,
+      "name": "apply cream on face"
+    },
+    {
+      "class_id": 86,
+      "one_based_label": 87,
+      "name": "put on bag"
+    },
+    {
+      "class_id": 87,
+      "one_based_label": 88,
+      "name": "take off bag"
+    },
+    {
+      "class_id": 88,
+      "one_based_label": 89,
+      "name": "put something into a bag"
+    },
+    {
+      "class_id": 89,
+      "one_based_label": 90,
+      "name": "take something out of a bag"
+    },
+    {
+      "class_id": 90,
+      "one_based_label": 91,
+      "name": "open a box"
+    },
+    {
+      "class_id": 91,
+      "one_based_label": 92,
+      "name": "move heavy objects"
+    },
+    {
+      "class_id": 92,
+      "one_based_label": 93,
+      "name": "shake fist"
+    },
+    {
+      "class_id": 93,
+      "one_based_label": 94,
+      "name": "throw up cap/hat"
+    },
+    {
+      "class_id": 94,
+      "one_based_label": 95,
+      "name": "hands up both hands"
+    },
+    {
+      "class_id": 95,
+      "one_based_label": 96,
+      "name": "cross arms"
+    },
+    {
+      "class_id": 96,
+      "one_based_label": 97,
+      "name": "arm circles"
+    },
+    {
+      "class_id": 97,
+      "one_based_label": 98,
+      "name": "arm swings"
+    },
+    {
+      "class_id": 98,
+      "one_based_label": 99,
+      "name": "running on the spot"
+    },
+    {
+      "class_id": 99,
+      "one_based_label": 100,
+      "name": "butt kicks kick backward"
+    },
+    {
+      "class_id": 100,
+      "one_based_label": 101,
+      "name": "cross toe touch"
+    },
+    {
+      "class_id": 101,
+      "one_based_label": 102,
+      "name": "side kick"
+    },
+    {
+      "class_id": 102,
+      "one_based_label": 103,
+      "name": "yawn"
+    },
+    {
+      "class_id": 103,
+      "one_based_label": 104,
+      "name": "stretch oneself"
+    },
+    {
+      "class_id": 104,
+      "one_based_label": 105,
+      "name": "blow nose"
+    },
+    {
+      "class_id": 105,
+      "one_based_label": 106,
+      "name": "hit other person with something"
+    },
+    {
+      "class_id": 106,
+      "one_based_label": 107,
+      "name": "wield knife towards other person"
+    },
+    {
+      "class_id": 107,
+      "one_based_label": 108,
+      "name": "knock over other person"
+    },
+    {
+      "class_id": 108,
+      "one_based_label": 109,
+      "name": "grab other person's stuff"
+    },
+    {
+      "class_id": 109,
+      "one_based_label": 110,
+      "name": "shoot at other person with a gun"
+    },
+    {
+      "class_id": 110,
+      "one_based_label": 111,
+      "name": "step on foot"
+    },
+    {
+      "class_id": 111,
+      "one_based_label": 112,
+      "name": "high-five"
+    },
+    {
+      "class_id": 113,
+      "one_based_label": 114,
+      "name": "carry something with other person"
+    },
+    {
+      "class_id": 115,
+      "one_based_label": 116,
+      "name": "follow other person"
+    },
+    {
+      "class_id": 116,
+      "one_based_label": 117,
+      "name": "whisper in other person's ear"
+    },
+    {
+      "class_id": 117,
+      "one_based_label": 118,
+      "name": "exchange things with other person"
+    },
+    {
+      "class_id": 118,
+      "one_based_label": 119,
+      "name": "support somebody with hand"
+    },
+    {
+      "class_id": 119,
+      "one_based_label": 120,
+      "name": "finger-guessing game"
+    }
+  ],
+  "unseen_classes": [
+    {
+      "class_id": 17,
+      "one_based_label": 18,
+      "name": "wear on glasses"
+    },
+    {
+      "class_id": 21,
+      "one_based_label": 22,
+      "name": "cheer up"
+    },
+    {
+      "class_id": 47,
+      "one_based_label": 48,
+      "name": "nausea or vomiting condition"
+    },
+    {
+      "class_id": 48,
+      "one_based_label": 49,
+      "name": "use a fan"
+    },
+    {
+      "class_id": 49,
+      "one_based_label": 50,
+      "name": "punching/slapping other person"
+    },
+    {
+      "class_id": 80,
+      "one_based_label": 81,
+      "name": "toss a coin"
+    },
+    {
+      "class_id": 81,
+      "one_based_label": 82,
+      "name": "fold paper"
+    },
+    {
+      "class_id": 85,
+      "one_based_label": 86,
+      "name": "apply cream on hand back"
+    },
+    {
+      "class_id": 112,
+      "one_based_label": 113,
+      "name": "cheers and drink"
+    },
+    {
+      "class_id": 114,
+      "one_based_label": 115,
+      "name": "take a photo of other person"
+    }
+  ]
+}

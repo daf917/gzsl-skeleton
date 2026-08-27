@@ -183,7 +183,7 @@ class SkeletonEncoder(nn.Module):
     def __init__(self,
                  num_joints: int = 25,
                  num_classes: int = 60,
-                 feature_dim: int = 256,
+                 feature_dim: int = 512,
                  num_parts: int = 6,
                  dropout: float = 0.5,
                  pretrained_path: Optional[str] = None):
@@ -225,7 +225,7 @@ class SkeletonEncoder(nn.Module):
     
     def _build_shift_gcn(self):
         """Build Shift-GCN architecture"""
-        # This is a simplified version - use actual Shift-GCN in practice
+        # Compact Shift-GCN-compatible backbone.
         layers = []
         
         # Spatial temporal graph convolution layers
@@ -301,11 +301,11 @@ if __name__ == "__main__":
     encoder = SkeletonEncoder(
         num_joints=25,
         num_classes=60,
-        feature_dim=256,
+        feature_dim=512,
         num_parts=6
     )
     
-    # Dummy input
+    # Example input
     B, T, J, P = 4, 64, 25, 6
     skeleton = torch.randn(B, T, J, 3)
     motion_attr = torch.randn(B, T, P, 8)

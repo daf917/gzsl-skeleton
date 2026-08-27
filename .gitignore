@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Local outputs.
+*.log
+tmp/
+temp/
+data/prompts/raw*/
+data/prompts/*_prompt_inputs.json
+
+# Local environments and editor state.
+.venv/
+venv/
+env/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

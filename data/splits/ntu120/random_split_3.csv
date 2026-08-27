@@ -1,0 +1,121 @@
+class_id,one_based_label,name,set
+0,1,drink water,seen
+1,2,eat meal/snack,seen
+2,3,brushing teeth,seen
+3,4,brushing hair,seen
+4,5,drop,seen
+5,6,pickup,seen
+6,7,throw,seen
+7,8,sitting down,seen
+8,9,standing up from sitting position,seen
+9,10,clapping,seen
+10,11,reading,seen
+11,12,writing,seen
+12,13,tear up paper,seen
+13,14,wear jacket,seen
+14,15,take off jacket,seen
+15,16,wear a shoe,seen
+16,17,take off a shoe,seen
+18,19,take off glasses,seen
+19,20,put on a hat/cap,seen
+20,21,take off a hat/cap,seen
+22,23,hand waving,seen
+23,24,kicking something,seen
+24,25,reach into pocket,seen
+25,26,hopping one foot jumping,seen
+26,27,jump up,seen
+27,28,make a phone call/answer phone,seen
+28,29,playing with phone/tablet,seen
+29,30,typing on a keyboard,seen
+30,31,pointing to something with finger,seen
+31,32,taking a selfie,seen
+32,33,check time from watch,seen
+33,34,rub two hands together,seen
+34,35,nod head/bow,seen
+35,36,shake head,seen
+36,37,wipe face,seen
+37,38,salute,seen
+38,39,put the palms together,seen
+39,40,cross hands in front,seen
+40,41,sneeze/cough,seen
+41,42,staggering,seen
+42,43,falling,seen
+43,44,touch head,seen
+44,45,touch chest,seen
+45,46,touch back,seen
+46,47,touch neck,seen
+50,51,kicking other person,seen
+51,52,pushing other person,seen
+52,53,pat on back of other person,seen
+53,54,point finger at the other person,seen
+54,55,hugging other person,seen
+55,56,giving something to other person,seen
+56,57,touch other person's pocket,seen
+57,58,handshaking,seen
+58,59,walking towards each other,seen
+59,60,walking apart from each other,seen
+60,61,put on headphone,seen
+61,62,take off headphone,seen
+62,63,shoot at the basket,seen
+63,64,bounce ball,seen
+64,65,tennis bat swing,seen
+65,66,juggling table tennis balls,seen
+66,67,hush,seen
+67,68,flick hair,seen
+68,69,thumb up,seen
+69,70,thumb down,seen
+70,71,make ok sign,seen
+71,72,make victory sign,seen
+72,73,staple book,seen
+73,74,counting money,seen
+74,75,cutting nails,seen
+75,76,cutting paper using scissors,seen
+76,77,snapping fingers,seen
+77,78,open bottle,seen
+78,79,sniff smell,seen
+79,80,squat down,seen
+82,83,ball up paper,seen
+83,84,play magic cube,seen
+84,85,apply cream on face,seen
+86,87,put on bag,seen
+87,88,take off bag,seen
+88,89,put something into a bag,seen
+89,90,take something out of a bag,seen
+90,91,open a box,seen
+91,92,move heavy objects,seen
+92,93,shake fist,seen
+93,94,throw up cap/hat,seen
+94,95,hands up both hands,seen
+95,96,cross arms,seen
+96,97,arm circles,seen
+97,98,arm swings,seen
+98,99,running on the spot,seen
+99,100,butt kicks kick backward,seen
+100,101,cross toe touch,seen
+101,102,side kick,seen
+102,103,yawn,seen
+103,104,stretch oneself,seen
+104,105,blow nose,seen
+105,106,hit other person with something,seen
+106,107,wield knife towards other person,seen
+107,108,knock over other person,seen
+108,109,grab other person's stuff,seen
+109,110,shoot at other person with a gun,seen
+110,111,step on foot,seen
+111,112,high-five,seen
+113,114,carry something with other person,seen
+115,116,follow other person,seen
+116,117,whisper in other person's ear,seen
+117,118,exchange things with other person,seen
+118,119,support somebody with hand,seen
+119,120,finger-guessing game,seen
+17,18,wear on glasses,unseen
+21,22,cheer up,unseen
+47,48,nausea or vomiting condition,unseen
+48,49,use a fan,unseen
+49,50,punching/slapping other person,unseen
+80,81,toss a coin,unseen
+81,82,fold paper,unseen
+85,86,apply cream on hand back,unseen
+112,113,cheers and drink,unseen
+114,115,take a photo of other person,unseen

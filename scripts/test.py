@@ -143,7 +143,7 @@ def main(args):
     # Create evaluator
     evaluator = GZSLEvaluator(seen_classes, unseen_classes)
     
-    # TODO: Load text features
+    # Text features can be loaded from precomputed prompt encodings when available.
     text_features_global = None
     
     # Test

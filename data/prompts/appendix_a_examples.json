@@ -1,0 +1,29 @@
+[
+  {
+    "action_class": "drinking water",
+    "head": "The head performs a small downward tilting motion and then returns to a neutral position.",
+    "torso": "The torso remains upright and stable, with minimal lateral or rotational movement.",
+    "left_arm": "The left arm bends at the elbow and moves toward the torso midline, then returns.",
+    "right_arm": "The right arm bends at the elbow and moves in a complementary motion.",
+    "left_leg": "The left leg stays planted on the ground with no significant displacement.",
+    "right_leg": "The right leg remains stationary and provides a stable base of support."
+  },
+  {
+    "action_class": "clapping",
+    "head": "The head remains aligned with the torso and exhibits minimal independent motion.",
+    "torso": "The torso undergoes subtle forward leaning and lateral swaying synchronized with arm motion.",
+    "left_arm": "The left arm swings toward the midline, with the hand moving rapidly in a back-and-forth motion.",
+    "right_arm": "The right arm mirrors the left arm motion, crossing or meeting near the body center.",
+    "left_leg": "The left leg provides a stable base and may exhibit slight weight redistribution.",
+    "right_leg": "The right leg maintains a planted stance and may shift slightly during energetic clapping."
+  },
+  {
+    "action_class": "jumping jack",
+    "head": "The head stays level and aligned with the torso throughout, with no independent displacement.",
+    "torso": "The torso undergoes vertical oscillation and lateral expansion synchronized with limb movements.",
+    "left_arm": "The left arm swings from the side of the body upward to full extension in a lateral arc.",
+    "right_arm": "The right arm mirrors the left arm motion, rising and falling symmetrically.",
+    "left_leg": "The left leg swings laterally outward from a standing position and returns to the starting stance.",
+    "right_leg": "The right leg performs a symmetric lateral swing synchronized with the left leg."
+  }
+]

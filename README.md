@@ -3,7 +3,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/PyTorch-2.0+-ee4c2c?style=flat&logo=pytorch" alt="PyTorch">
   <img src="https://img.shields.io/badge/python-3.8+-blue?style=flat&logo=python" alt="Python">
-  <img src="https://img.shields.io/github/license/your-username/GZSL?style=flat" alt="License">
+  <img src="https://img.shields.io/badge/license-MIT-green?style=flat" alt="License">
 </p>
 
 <p align="center">
@@ -13,14 +13,15 @@
 
 This is a PyTorch implementation of the paper:
 
-> **Generalized Zero-Shot Skeleton Action Recognition with Compositional Motion-Attribute Primitives**  
-> *Jinlong Wang, Xuan Liu, Bin Lyu, Jinchao Ge, Jiahui Yu*  
+> **Generalized Zero-Shot Skeleton Action Recognition with Compositional Motion-Attribute Primitives**
+> *Jinlong Wang, Xuan Liu, Bin Lyu, Jinchao Ge, Jiahui Yu*
 > Pattern Recognition, 2025
 
 <p align="center">
   <a href="#overview">Overview</a> •
   <a href="#installation">Installation</a> •
   <a href="#quick-start">Quick Start</a> •
+  <a href="#reproducibility-materials">Reproducibility</a> •
   <a href="#project-structure">Structure</a> •
   <a href="#citation">Citation</a>
 </p>
@@ -45,8 +46,8 @@ This project implements a compositional framework for **Generalized Zero-Shot (G
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/GZSL.git
-cd GZSL
+git clone <repository-url>
+cd gzsl-skeleton
 
 # Create virtual environment
 python -m venv venv
@@ -75,12 +76,10 @@ transformers
 
 ## Quick Start
 
-### 1. Generate Text Prompts
-
-Generate part-level textual descriptions for action classes:
+### 1. Rebuild Released Split Files
 
 ```bash
-python scripts/generate_prompts.py --dataset ntu60 --output data/prompts/
+python scripts/build_reproducibility_assets.py
 ```
 
 ### 2. Train the Model
@@ -102,7 +101,7 @@ python scripts/test.py --checkpoint checkpoints/best_model.pth --dataset ntu60
 ```
 GZSL/
 ├── config/
-│   └── config.py              # Configuration settings
+│   └── config.yaml            # Configuration settings
 ├── data/
 │   ├── __init__.py
 │   ├── dataset.py             # Dataset loaders (NTU60/120, PKU-MMD, UCF101, HMDB-51)
@@ -120,7 +119,7 @@ GZSL/
 ├── scripts/
 │   ├── train.py               # Training script
 │   ├── test.py                # Testing script
-│   └── generate_prompts.py   # LLM prompt generation
+│   └── generate_prompts.py   # Prompt and text-feature utilities
 ├── clip/                      # CLIP model weights
 ├── requirements.txt
 ├── README.md
@@ -129,16 +128,32 @@ GZSL/
 
 ---
 
+## Reproducibility Materials
+
+This repository includes the reproducibility materials for the paper:
+
+- `prompts/prompt_template.md`: exact prompt template for body-part descriptions.
+- `data/prompts/{ntu60,ntu120,ucf101,pku_mmd,hmdb51}.json`: minimal JSON arrays containing each `action_class` and its generated head, torso, left/right arm, and left/right leg descriptions.
+- `data/prompts/appendix_a_examples.json`: representative generated examples synchronized with Appendix A Table 6.
+- `data/splits/<dataset>/*.json` and `.csv`: explicit seen/unseen class partitions for the random and provided protocols.
+- `scripts/preprocess_skeletons.py`: preprocessing entry point for raw NTU/PKU skeleton files, generic NPZ skeletons, COCO/OpenPose-style 2D pose JSON, motion-attribute extraction, and normalization.
+
+See `docs/reproducibility_materials.md` for file-format notes and `docs/appendix_a_supplementary.md` for the Appendix A diagnostic tables and settings.
+
+---
+
 ## Training
 
 ### Expected Results
 
-| Dataset | Acc_s | Acc_u | HM |
-|---------|-------|-------|-----|
-| NTU60 | ~85% | ~65% | ~73% |
-| NTU120 | ~82% | ~60% | ~69% |
-| UCF101 | ~78% | ~55% | ~64% |
-| PKU-MMD | ~80% | ~58% | ~67% |
+| Dataset | Split | Acc_s | Acc_u | HM |
+|---------|-------|------:|------:|---:|
+| NTU60 | 3-split random, 55/5 | 78.5 | 81.2 | 79.8 |
+| NTU120 | 3-split random, 110/10 | 63.4 | 77.6 | 69.9 |
+| UCF101 | 3-split random, 80/21 | 96.1 | 83.7 | 89.5 |
+| UCF101 | 3-split provided, 80/21 | 95.6 | 84.0 | 89.4 |
+| PKU-MMD | 3-split random, 46/5 | 70.8 | 62.0 | 66.1 |
+| PKU-MMD | 3-split provided, 46/5 | 76.8 | 63.9 | 69.8 |
 
 ---
 

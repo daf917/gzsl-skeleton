@@ -1,0 +1,519 @@
+{
+  "dataset": "ucf101",
+  "protocol": "3-split provided",
+  "split_index": 1,
+  "seed": null,
+  "index_base": 0,
+  "num_classes": 101,
+  "seen_count": 80,
+  "unseen_count": 21,
+  "seen_classes": [
+    {
+      "class_id": 1,
+      "one_based_label": 2,
+      "name": "ApplyLipstick"
+    },
+    {
+      "class_id": 2,
+      "one_based_label": 3,
+      "name": "Archery"
+    },
+    {
+      "class_id": 4,
+      "one_based_label": 5,
+      "name": "BalanceBeam"
+    },
+    {
+      "class_id": 5,
+      "one_based_label": 6,
+      "name": "BandMarching"
+    },
+    {
+      "class_id": 6,
+      "one_based_label": 7,
+      "name": "BaseballPitch"
+    },
+    {
+      "class_id": 7,
+      "one_based_label": 8,
+      "name": "Basketball"
+    },
+    {
+      "class_id": 8,
+      "one_based_label": 9,
+      "name": "BasketballDunk"
+    },
+    {
+      "class_id": 9,
+      "one_based_label": 10,
+      "name": "BenchPress"
+    },
+    {
+      "class_id": 11,
+      "one_based_label": 12,
+      "name": "Billiards"
+    },
+    {
+      "class_id": 12,
+      "one_based_label": 13,
+      "name": "BlowDryHair"
+    },
+    {
+      "class_id": 13,
+      "one_based_label": 14,
+      "name": "BlowingCandles"
+    },
+    {
+      "class_id": 14,
+      "one_based_label": 15,
+      "name": "BodyWeightSquats"
+    },
+    {
+      "class_id": 15,
+      "one_based_label": 16,
+      "name": "Bowling"
+    },
+    {
+      "class_id": 16,
+      "one_based_label": 17,
+      "name": "BoxingPunchingBag"
+    },
+    {
+      "class_id": 17,
+      "one_based_label": 18,
+      "name": "BoxingSpeedBag"
+    },
+    {
+      "class_id": 19,
+      "one_based_label": 20,
+      "name": "BrushingTeeth"
+    },
+    {
+      "class_id": 20,
+      "one_based_label": 21,
+      "name": "CleanAndJerk"
+    },
+    {
+      "class_id": 22,
+      "one_based_label": 23,
+      "name": "CricketBowling"
+    },
+    {
+      "class_id": 23,
+      "one_based_label": 24,
+      "name": "CricketShot"
+    },
+    {
+      "class_id": 24,
+      "one_based_label": 25,
+      "name": "CuttingInKitchen"
+    },
+    {
+      "class_id": 26,
+      "one_based_label": 27,
+      "name": "Drumming"
+    },
+    {
+      "class_id": 27,
+      "one_based_label": 28,
+      "name": "Fencing"
+    },
+    {
+      "class_id": 28,
+      "one_based_label": 29,
+      "name": "FieldHockeyPenalty"
+    },
+    {
+      "class_id": 29,
+      "one_based_label": 30,
+      "name": "FloorGymnastics"
+    },
+    {
+      "class_id": 30,
+      "one_based_label": 31,
+      "name": "FrisbeeCatch"
+    },
+    {
+      "class_id": 31,
+      "one_based_label": 32,
+      "name": "FrontCrawl"
+    },
+    {
+      "class_id": 33,
+      "one_based_label": 34,
+      "name": "Haircut"
+    },
+    {
+      "class_id": 34,
+      "one_based_label": 35,
+      "name": "Hammering"
+    },
+    {
+      "class_id": 35,
+      "one_based_label": 36,
+      "name": "HammerThrow"
+    },
+    {
+      "class_id": 36,
+      "one_based_label": 37,
+      "name": "HandstandPushups"
+    },
+    {
+      "class_id": 37,
+      "one_based_label": 38,
+      "name": "HandstandWalking"
+    },
+    {
+      "class_id": 38,
+      "one_based_label": 39,
+      "name": "HeadMassage"
+    },
+    {
+      "class_id": 40,
+      "one_based_label": 41,
+      "name": "HorseRace"
+    },
+    {
+      "class_id": 42,
+      "one_based_label": 43,
+      "name": "HulaHoop"
+    },
+    {
+      "class_id": 43,
+      "one_based_label": 44,
+      "name": "IceDancing"
+    },
+    {
+      "class_id": 44,
+      "one_based_label": 45,
+      "name": "JavelinThrow"
+    },
+    {
+      "class_id": 45,
+      "one_based_label": 46,
+      "name": "JugglingBalls"
+    },
+    {
+      "class_id": 46,
+      "one_based_label": 47,
+      "name": "JumpRope"
+    },
+    {
+      "class_id": 48,
+      "one_based_label": 49,
+      "name": "Kayaking"
+    },
+    {
+      "class_id": 49,
+      "one_based_label": 50,
+      "name": "Knitting"
+    },
+    {
+      "class_id": 51,
+      "one_based_label": 52,
+      "name": "Lunges"
+    },
+    {
+      "class_id": 52,
+      "one_based_label": 53,
+      "name": "MilitaryParade"
+    },
+    {
+      "class_id": 53,
+      "one_based_label": 54,
+      "name": "Mixing"
+    },
+    {
+      "class_id": 54,
+      "one_based_label": 55,
+      "name": "MoppingFloor"
+    },
+    {
+      "class_id": 55,
+      "one_based_label": 56,
+      "name": "Nunchucks"
+    },
+    {
+      "class_id": 57,
+      "one_based_label": 58,
+      "name": "PizzaTossing"
+    },
+    {
+      "class_id": 58,
+      "one_based_label": 59,
+      "name": "PlayingCello"
+    },
+    {
+      "class_id": 59,
+      "one_based_label": 60,
+      "name": "PlayingDaf"
+    },
+    {
+      "class_id": 60,
+      "one_based_label": 61,
+      "name": "PlayingDhol"
+    },
+    {
+      "class_id": 61,
+      "one_based_label": 62,
+      "name": "PlayingFlute"
+    },
+    {
+      "class_id": 62,
+      "one_based_label": 63,
+      "name": "PlayingGuitar"
+    },
+    {
+      "class_id": 63,
+      "one_based_label": 64,
+      "name": "PlayingPiano"
+    },
+    {
+      "class_id": 64,
+      "one_based_label": 65,
+      "name": "PlayingSitar"
+    },
+    {
+      "class_id": 65,
+      "one_based_label": 66,
+      "name": "PlayingTabla"
+    },
+    {
+      "class_id": 66,
+      "one_based_label": 67,
+      "name": "PlayingViolin"
+    },
+    {
+      "class_id": 68,
+      "one_based_label": 69,
+      "name": "PommelHorse"
+    },
+    {
+      "class_id": 69,
+      "one_based_label": 70,
+      "name": "PullUps"
+    },
+    {
+      "class_id": 70,
+      "one_based_label": 71,
+      "name": "Punch"
+    },
+    {
+      "class_id": 71,
+      "one_based_label": 72,
+      "name": "PushUps"
+    },
+    {
+      "class_id": 73,
+      "one_based_label": 74,
+      "name": "RockClimbingIndoor"
+    },
+    {
+      "class_id": 74,
+      "one_based_label": 75,
+      "name": "RopeClimbing"
+    },
+    {
+      "class_id": 76,
+      "one_based_label": 77,
+      "name": "SalsaSpin"
+    },
+    {
+      "class_id": 77,
+      "one_based_label": 78,
+      "name": "ShavingBeard"
+    },
+    {
+      "class_id": 78,
+      "one_based_label": 79,
+      "name": "Shotput"
+    },
+    {
+      "class_id": 79,
+      "one_based_label": 80,
+      "name": "SkateBoarding"
+    },
+    {
+      "class_id": 81,
+      "one_based_label": 82,
+      "name": "Skijet"
+    },
+    {
+      "class_id": 82,
+      "one_based_label": 83,
+      "name": "SkyDiving"
+    },
+    {
+      "class_id": 83,
+      "one_based_label": 84,
+      "name": "SoccerJuggling"
+    },
+    {
+      "class_id": 85,
+      "one_based_label": 86,
+      "name": "StillRings"
+    },
+    {
+      "class_id": 86,
+      "one_based_label": 87,
+      "name": "SumoWrestling"
+    },
+    {
+      "class_id": 88,
+      "one_based_label": 89,
+      "name": "Swing"
+    },
+    {
+      "class_id": 89,
+      "one_based_label": 90,
+      "name": "TableTennisShot"
+    },
+    {
+      "class_id": 90,
+      "one_based_label": 91,
+      "name": "TaiChi"
+    },
+    {
+      "class_id": 91,
+      "one_based_label": 92,
+      "name": "TennisSwing"
+    },
+    {
+      "class_id": 93,
+      "one_based_label": 94,
+      "name": "TrampolineJumping"
+    },
+    {
+      "class_id": 94,
+      "one_based_label": 95,
+      "name": "Typing"
+    },
+    {
+      "class_id": 95,
+      "one_based_label": 96,
+      "name": "UnevenBars"
+    },
+    {
+      "class_id": 97,
+      "one_based_label": 98,
+      "name": "WalkingWithDog"
+    },
+    {
+      "class_id": 98,
+      "one_based_label": 99,
+      "name": "WallPushups"
+    },
+    {
+      "class_id": 99,
+      "one_based_label": 100,
+      "name": "WritingOnBoard"
+    }
+  ],
+  "unseen_classes": [
+    {
+      "class_id": 0,
+      "one_based_label": 1,
+      "name": "ApplyEyeMakeup"
+    },
+    {
+      "class_id": 3,
+      "one_based_label": 4,
+      "name": "BabyCrawling"
+    },
+    {
+      "class_id": 10,
+      "one_based_label": 11,
+      "name": "Biking"
+    },
+    {
+      "class_id": 18,
+      "one_based_label": 19,
+      "name": "BreastStroke"
+    },
+    {
+      "class_id": 21,
+      "one_based_label": 22,
+      "name": "CliffDiving"
+    },
+    {
+      "class_id": 25,
+      "one_based_label": 26,
+      "name": "Diving"
+    },
+    {
+      "class_id": 32,
+      "one_based_label": 33,
+      "name": "GolfSwing"
+    },
+    {
+      "class_id": 39,
+      "one_based_label": 40,
+      "name": "HighJump"
+    },
+    {
+      "class_id": 41,
+      "one_based_label": 42,
+      "name": "HorseRiding"
+    },
+    {
+      "class_id": 47,
+      "one_based_label": 48,
+      "name": "JumpingJack"
+    },
+    {
+      "class_id": 50,
+      "one_based_label": 51,
+      "name": "LongJump"
+    },
+    {
+      "class_id": 56,
+      "one_based_label": 57,
+      "name": "ParallelBars"
+    },
+    {
+      "class_id": 67,
+      "one_based_label": 68,
+      "name": "PoleVault"
+    },
+    {
+      "class_id": 72,
+      "one_based_label": 73,
+      "name": "Rafting"
+    },
+    {
+      "class_id": 75,
+      "one_based_label": 76,
+      "name": "Rowing"
+    },
+    {
+      "class_id": 80,
+      "one_based_label": 81,
+      "name": "Skiing"
+    },
+    {
+      "class_id": 84,
+      "one_based_label": 85,
+      "name": "SoccerPenalty"
+    },
+    {
+      "class_id": 87,
+      "one_based_label": 88,
+      "name": "Surfing"
+    },
+    {
+      "class_id": 92,
+      "one_based_label": 93,
+      "name": "ThrowDiscus"
+    },
+    {
+      "class_id": 96,
+      "one_based_label": 97,
+      "name": "VolleyballSpiking"
+    },
+    {
+      "class_id": 100,
+      "one_based_label": 101,
+      "name": "YoYo"
+    }
+  ]
+}

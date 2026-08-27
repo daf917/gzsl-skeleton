@@ -1,0 +1,269 @@
+{
+  "dataset": "pku_mmd",
+  "protocol": "3-split random",
+  "split_index": 1,
+  "seed": 20260825,
+  "index_base": 0,
+  "num_classes": 51,
+  "seen_count": 46,
+  "unseen_count": 5,
+  "seen_classes": [
+    {
+      "class_id": 0,
+      "one_based_label": 1,
+      "name": "bow"
+    },
+    {
+      "class_id": 2,
+      "one_based_label": 3,
+      "name": "check time"
+    },
+    {
+      "class_id": 3,
+      "one_based_label": 4,
+      "name": "cheer up"
+    },
+    {
+      "class_id": 4,
+      "one_based_label": 5,
+      "name": "clean"
+    },
+    {
+      "class_id": 5,
+      "one_based_label": 6,
+      "name": "clapping"
+    },
+    {
+      "class_id": 6,
+      "one_based_label": 7,
+      "name": "drink"
+    },
+    {
+      "class_id": 7,
+      "one_based_label": 8,
+      "name": "eat"
+    },
+    {
+      "class_id": 8,
+      "one_based_label": 9,
+      "name": "fall"
+    },
+    {
+      "class_id": 9,
+      "one_based_label": 10,
+      "name": "fight"
+    },
+    {
+      "class_id": 10,
+      "one_based_label": 11,
+      "name": "give an item"
+    },
+    {
+      "class_id": 11,
+      "one_based_label": 12,
+      "name": "hand waving"
+    },
+    {
+      "class_id": 12,
+      "one_based_label": 13,
+      "name": "hit"
+    },
+    {
+      "class_id": 13,
+      "one_based_label": 14,
+      "name": "hug"
+    },
+    {
+      "class_id": 14,
+      "one_based_label": 15,
+      "name": "kick"
+    },
+    {
+      "class_id": 15,
+      "one_based_label": 16,
+      "name": "lie down"
+    },
+    {
+      "class_id": 17,
+      "one_based_label": 18,
+      "name": "point"
+    },
+    {
+      "class_id": 18,
+      "one_based_label": 19,
+      "name": "pose"
+    },
+    {
+      "class_id": 19,
+      "one_based_label": 20,
+      "name": "push"
+    },
+    {
+      "class_id": 20,
+      "one_based_label": 21,
+      "name": "put on clothes"
+    },
+    {
+      "class_id": 21,
+      "one_based_label": 22,
+      "name": "read"
+    },
+    {
+      "class_id": 22,
+      "one_based_label": 23,
+      "name": "ride bike"
+    },
+    {
+      "class_id": 23,
+      "one_based_label": 24,
+      "name": "ride horse"
+    },
+    {
+      "class_id": 24,
+      "one_based_label": 25,
+      "name": "run"
+    },
+    {
+      "class_id": 25,
+      "one_based_label": 26,
+      "name": "sit down"
+    },
+    {
+      "class_id": 26,
+      "one_based_label": 27,
+      "name": "stand up"
+    },
+    {
+      "class_id": 27,
+      "one_based_label": 28,
+      "name": "take a photo"
+    },
+    {
+      "class_id": 28,
+      "one_based_label": 29,
+      "name": "take off clothes"
+    },
+    {
+      "class_id": 29,
+      "one_based_label": 30,
+      "name": "throw"
+    },
+    {
+      "class_id": 31,
+      "one_based_label": 32,
+      "name": "turn left"
+    },
+    {
+      "class_id": 32,
+      "one_based_label": 33,
+      "name": "turn right"
+    },
+    {
+      "class_id": 33,
+      "one_based_label": 34,
+      "name": "walk"
+    },
+    {
+      "class_id": 34,
+      "one_based_label": 35,
+      "name": "wave goodbye"
+    },
+    {
+      "class_id": 35,
+      "one_based_label": 36,
+      "name": "wear glasses"
+    },
+    {
+      "class_id": 36,
+      "one_based_label": 37,
+      "name": "wear hat"
+    },
+    {
+      "class_id": 37,
+      "one_based_label": 38,
+      "name": "wear shoes"
+    },
+    {
+      "class_id": 38,
+      "one_based_label": 39,
+      "name": "write"
+    },
+    {
+      "class_id": 40,
+      "one_based_label": 41,
+      "name": "salute"
+    },
+    {
+      "class_id": 41,
+      "one_based_label": 42,
+      "name": "cross hands"
+    },
+    {
+      "class_id": 42,
+      "one_based_label": 43,
+      "name": "touch head"
+    },
+    {
+      "class_id": 44,
+      "one_based_label": 45,
+      "name": "touch back"
+    },
+    {
+      "class_id": 45,
+      "one_based_label": 46,
+      "name": "touch neck"
+    },
+    {
+      "class_id": 46,
+      "one_based_label": 47,
+      "name": "nausea/vomiting"
+    },
+    {
+      "class_id": 47,
+      "one_based_label": 48,
+      "name": "hop"
+    },
+    {
+      "class_id": 48,
+      "one_based_label": 49,
+      "name": "jump"
+    },
+    {
+      "class_id": 49,
+      "one_based_label": 50,
+      "name": "shake hands"
+    },
+    {
+      "class_id": 50,
+      "one_based_label": 51,
+      "name": "put on/take off cap"
+    }
+  ],
+  "unseen_classes": [
+    {
+      "class_id": 1,
+      "one_based_label": 2,
+      "name": "brushing teeth"
+    },
+    {
+      "class_id": 16,
+      "one_based_label": 17,
+      "name": "make a phone call"
+    },
+    {
+      "class_id": 30,
+      "one_based_label": 31,
+      "name": "touch"
+    },
+    {
+      "class_id": 39,
+      "one_based_label": 40,
+      "name": "yawn"
+    },
+    {
+      "class_id": 43,
+      "one_based_label": 44,
+      "name": "touch chest"
+    }
+  ]
+}

@@ -96,7 +96,7 @@ class TextEncoder(nn.Module):
     def __init__(self, 
                  clip_model_name: str = "ViT-B/32",
                  freeze_clip: bool = True,
-                 feature_dim: int = 256,
+                 feature_dim: int = 512,
                  num_parts: int = 6):
         """
         Args:
@@ -207,7 +207,7 @@ class TextEncoder(nn.Module):
 
 class TextPromptGenerator:
     """
-    Generates text prompts for action classes using LLM
+    Generates template-based text prompts for action classes.
     """
     
     BODY_PARTS = ["head", "torso", "left arm", "right arm", "left leg", "right leg"]
@@ -243,7 +243,7 @@ class TextPromptGenerator:
 # Example usage
 if __name__ == "__main__":
     # Test text encoder
-    encoder = TextEncoder(clip_model_name="ViT-B/32", feature_dim=256, num_parts=6)
+    encoder = TextEncoder(clip_model_name="ViT-B/32", feature_dim=512, num_parts=6)
     
     # Test prompt generator
     generator = TextPromptGenerator()
