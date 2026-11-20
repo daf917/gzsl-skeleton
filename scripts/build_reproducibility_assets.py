@@ -437,41 +437,9 @@ def write_splits() -> None:
                 write_split_csv(base.with_suffix(".csv"), payload)
 
 
-def write_docs() -> None:
-    docs = ROOT / "docs"
-    docs.mkdir(exist_ok=True)
-    (docs / "reproducibility_materials.md").write_text(
-        """# Reproducibility Materials
-
-This repository includes the reproducibility materials for the paper:
-
-- `prompts/prompt_template.md`: exact prompt template.
-- `data/prompts/{ntu60,ntu120,ucf101,pku_mmd,hmdb51}.json`: body-part descriptions for each released action class.
-- `data/splits/<dataset>/*.json` and `.csv`: explicit seen/unseen class partitions for each split.
-- `scripts/preprocess_skeletons.py`: preprocessing utilities for raw skeleton parsing, sequence normalization, resampling, 2D pose conversion, motion-attribute extraction, and train-statistics normalization.
-
-All split files use zero-based `class_id` values matching Python labels and also include `one_based_label` values for dataset documentation.
-""",
-        encoding="utf-8",
-    )
-    (ROOT / "data" / "splits" / "README.md").write_text(
-        """# Dataset Split Files
-
-Each split is released as both JSON and CSV. JSON files are used by code; CSV files are for quick inspection.
-
-- `random_split_1..3`: deterministic random splits generated with the seeds recorded in the JSON files.
-- `provided_split_1..3`: explicit provided-protocol class partitions for datasets evaluated under the provided protocol.
-
-Labels are zero-based in `class_id`, matching the training code. `one_based_label` is included for papers and dataset documentation that label classes from 1.
-""",
-        encoding="utf-8",
-    )
-
-
 def main() -> None:
     write_splits()
-    write_docs()
-    print("Split/docs assets written.")
+    print("Class split files written.")
 
 
 if __name__ == "__main__":

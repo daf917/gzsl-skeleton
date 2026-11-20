@@ -1,6 +1,6 @@
 # Appendix A Supplementary Materials
 
-This document mirrors the supplementary material submitted as Appendix A.
+This document summarizes Appendix A using the loss notation of the main manuscript.
 
 ## 1. Preliminary Diagnostic Analysis Of Motion Attributes
 
@@ -104,7 +104,7 @@ The 6-part partition is used as the default because it provides the best balance
 
 Table 5. Hyperparameter sensitivity on NTU RGB+D 60, 55/5 split. Values are clean test-set HM.
 
-| lambda_i / lambda_c | 0.1 | 0.3 | 0.5 | 0.7 | 1.0 |
+| lambda_d / lambda_c | 0.1 | 0.3 | 0.5 | 0.7 | 1.0 |
 |---|---:|---:|---:|---:|---:|
 | 0.01 | 77.0 | 78.1 | 78.8 | 78.0 | 76.8 |
 | 0.05 | 77.8 | 79.3 | 79.5 | 79.0 | 77.6 |
@@ -112,7 +112,7 @@ Table 5. Hyperparameter sensitivity on NTU RGB+D 60, 55/5 split. Values are clea
 | 0.20 | 78.0 | 79.1 | 79.4 | 78.9 | 77.7 |
 | 0.50 | 76.8 | 78.3 | 78.7 | 78.0 | 76.4 |
 
-Default values are `lambda_c = 0.5` and `lambda_i = 0.1`.
+Default values are `lambda_c = 0.5` and `lambda_d = 0.1`.
 
 ## 6. LLM Prompt Template
 

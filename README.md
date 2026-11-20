@@ -1,195 +1,79 @@
-# Generalized Zero-Shot Skeleton Action Recognition
+# Generalized Zero-Shot Skeleton Action Recognition with Compositional Motion-Attribute Primitives
 
-<p align="center">
-  <img src="https://img.shields.io/badge/PyTorch-2.0+-ee4c2c?style=flat&logo=pytorch" alt="PyTorch">
-  <img src="https://img.shields.io/badge/python-3.8+-blue?style=flat&logo=python" alt="Python">
-  <img src="https://img.shields.io/badge/license-MIT-green?style=flat" alt="License">
-</p>
+Jinlong Wang, Xuan Liu, Bin Lyu, Jinchao Ge, and Jiahui Yu
 
-<p align="center">
-  <img src="./image/method.png" alt="Figure 2: Framework Overview" width="90%">
-</p>
-<p align="center"><b>Figure 2.</b> Overview of the proposed framework.</p>
+![Framework overview](image/method.png)
 
-This is a PyTorch implementation of the paper:
-
-> **Generalized Zero-Shot Skeleton Action Recognition with Compositional Motion-Attribute Primitives**
-> *Jinlong Wang, Xuan Liu, Bin Lyu, Jinchao Ge, Jiahui Yu*
-> Pattern Recognition, 2025
-
-<p align="center">
-  <a href="#overview">Overview</a> •
-  <a href="#installation">Installation</a> •
-  <a href="#quick-start">Quick Start</a> •
-  <a href="#reproducibility-materials">Reproducibility</a> •
-  <a href="#project-structure">Structure</a> •
-  <a href="#citation">Citation</a>
-</p>
-
----
-
-## Overview
-
-This project implements a compositional framework for **Generalized Zero-Shot (GZS) skeleton-based action recognition** that learns reusable body-part motion primitives and aligns them with structured textual semantics.
-
----
+The skeleton branch encodes motion attributes for six body parts and aggregates the resulting primitives with attention. The text branch uses frozen CLIP ViT-B/32 to construct global and part-level semantic anchors. Training uses separate primitive and global alignment losses, compositional consistency, and primitive decorrelation. Inference L2-normalizes the aggregated feature and scores it against the global text anchors for the joint seen/unseen label space.
 
 ## Installation
 
-### Prerequisites
-
-- Python 3.8+
-- PyTorch 2.0+
-- CUDA 11.0+ (for GPU support)
-
-### Setup
-
 ```bash
-# Clone the repository
-git clone <repository-url>
+git clone https://github.com/daf917/gzsl-skeleton.git
 cd gzsl-skeleton
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-# venv\Scripts\activate   # Windows
-
-# Install dependencies
 pip install -r requirements.txt
-
-# Download CLIP weights (automatically done on first run)
 ```
 
-### Requirements
+Use Python 3.10 or later. CLIP downloads the ViT-B/32 weights on first use. CUDA is recommended for training.
 
-```
-torch>=2.0.0
-torchvision
-numpy
-tqdm
-pyyaml
-scikit-learn
-transformers
-```
+## Train and evaluate a split
 
----
-
-## Quick Start
-
-### 1. Rebuild Released Split Files
+Prepare the 2D skeletons and sample assignments described in [Reproducibility materials](docs/reproducibility_materials.md). Use the same class split and preprocessed data for all three commands.
 
 ```bash
-python scripts/build_reproducibility_assets.py
+python scripts/pretrain_shift_gcn.py --config config/config.yaml --split-protocol random --split-index 1 --data-file data/ntu60/random_split_1.npz
+python scripts/train.py --config config/config.yaml --split-protocol random --split-index 1 --data-file data/ntu60/random_split_1.npz
+python scripts/test.py --config config/config.yaml --split-protocol random --split-index 1 --data-file data/ntu60/random_split_1.npz --checkpoint checkpoints/ntu60/random_split_1/model.pth --metrics-output random_split_1.json
 ```
 
-### 2. Train the Model
+Shift-GCN is pretrained on the labeled training samples of the seen classes and then frozen. The recognition model uses 64 frames, 512-dimensional embeddings, AdamW for 80 epochs, batch size 64, an initial learning rate of 0.0001, and weight decay of 0.0005. The contrastive temperature is 0.07. The primitive alignment, global alignment, compositional consistency, and primitive decorrelation weights are 1.0, 1.0, 0.5, and 0.1, respectively.
+
+Run splits 1–3 separately for each dataset and protocol. Put their result objects in the `splits` array of a JSON object with `dataset` and `protocol` fields.
 
 ```bash
-python scripts/train.py --config config/config.yaml
+python scripts/test.py --aggregate-split-results split_metrics.json
 ```
 
-### 3. Test the Model
+The aggregation first averages the unrounded seen and unseen accuracies across the three splits and then computes their harmonic mean. Use a separate file per method, dataset, and split protocol.
+
+## Few-shot evaluation
+
+Use a prepared HMDB-51 or SSv2 NPZ with separate support (`split=1`) and query (`split=2`) partitions and distinct sample IDs. The prototype evaluator uses a fixed seed and 2, 4, 8, or 16 support examples per class.
 
 ```bash
-python scripts/test.py --checkpoint checkpoints/best_model.pth --dataset ntu60
+python scripts/test_few_shot.py --dataset hmdb51 --data-file path/to/hmdb51.npz --checkpoint path/to/model.pth --num-shots 16 --seed 42
 ```
 
----
+Use a checkpoint trained with compatible 17-joint inputs. Reported few-shot results below use the manuscript's benchmark runs.
 
-## Project Structure
+## Results reported in the manuscript
 
-```
-GZSL/
-├── config/
-│   └── config.yaml            # Configuration settings
-├── data/
-│   ├── __init__.py
-│   ├── dataset.py             # Dataset loaders (NTU60/120, PKU-MMD, UCF101, HMDB-51)
-│   ├── motion_attribute.py    # Motion attribute computation (Section 3.1)
-│   └── few_shot.py            # Few-shot learning support
-├── models/
-│   ├── __init__.py
-│   ├── text_encoder.py        # CLIP + Local Text Encoder
-│   ├── skeleton_encoder.py    # Shift-GCN + Local Skeleton Encoder
-│   ├── aggregation.py         # Primitive composition & losses (Section 3.3)
-│   └── gzsl_model.py          # Main GZSL model (Section 3.4)
-├── utils/
-│   ├── __init__.py
-│   └── metrics.py             # GZSL evaluation metrics
-├── scripts/
-│   ├── train.py               # Training script
-│   ├── test.py                # Testing script
-│   └── generate_prompts.py   # Prompt and text-feature utilities
-├── clip/                      # CLIP model weights
-├── requirements.txt
-├── README.md
-└── __init__.py
-```
+| Dataset | Split | Seen (%) | Unseen (%) | HM (%) |
+|---|---|---:|---:|---:|
+| NTU60 | 3 random, 55/5 | 78.5 | 81.2 | 79.8 |
+| NTU120 | 3 random, 110/10 | 63.4 | 77.6 | 69.8 |
+| UCF101 | 3 random, 80/21 | 96.1 | 83.7 | 89.5 |
+| UCF101 | 3 provided, 80/21 | 95.6 | 84.0 | 89.4 |
+| PKU-MMD | 3 random, 46/5 | 70.8 | 62.0 | 66.1 |
+| PKU-MMD | 3 provided, 46/5 | 76.8 | 63.9 | 69.8 |
 
----
+| Few-shot dataset | 2-shot | 4-shot | 8-shot | 16-shot |
+|---|---:|---:|---:|---:|
+| HMDB-51 | 59.4 | 65.2 | 68.7 | 71.3 |
+| SSv2 | 8.2 | 10.1 | 11.8 | 15.4 |
 
-## Reproducibility Materials
-
-This repository includes the reproducibility materials for the paper:
-
-- `prompts/prompt_template.md`: exact prompt template for body-part descriptions.
-- `data/prompts/{ntu60,ntu120,ucf101,pku_mmd,hmdb51}.json`: minimal JSON arrays containing each `action_class` and its generated head, torso, left/right arm, and left/right leg descriptions.
-- `data/prompts/appendix_a_examples.json`: representative generated examples synchronized with Appendix A Table 6.
-- `data/splits/<dataset>/*.json` and `.csv`: explicit seen/unseen class partitions for the random and provided protocols.
-- `scripts/preprocess_skeletons.py`: preprocessing entry point for raw NTU/PKU skeleton files, generic NPZ skeletons, COCO/OpenPose-style 2D pose JSON, motion-attribute extraction, and normalization.
-
-See `docs/reproducibility_materials.md` for file-format notes and `docs/appendix_a_supplementary.md` for the Appendix A diagnostic tables and settings.
-
----
-
-## Training
-
-### Expected Results
-
-| Dataset | Split | Acc_s | Acc_u | HM |
-|---------|-------|------:|------:|---:|
-| NTU60 | 3-split random, 55/5 | 78.5 | 81.2 | 79.8 |
-| NTU120 | 3-split random, 110/10 | 63.4 | 77.6 | 69.9 |
-| UCF101 | 3-split random, 80/21 | 96.1 | 83.7 | 89.5 |
-| UCF101 | 3-split provided, 80/21 | 95.6 | 84.0 | 89.4 |
-| PKU-MMD | 3-split random, 46/5 | 70.8 | 62.0 | 66.1 |
-| PKU-MMD | 3-split provided, 46/5 | 76.8 | 63.9 | 69.8 |
-
----
-
-## Few-shot Evaluation
-
-Evaluate on unseen classes with K-shot:
-
-```bash
-python scripts/test.py --checkpoint checkpoints/best_model.pth \
-    --dataset hmdb51 --few-shot --num-shots 16 --num-way 5
-```
-
----
+DVTA reports higher accuracy on all four SSv2 shot settings.
 
 ## Citation
 
-If you use this code in your research, please cite:
-
 ```bibtex
-@article{wang2025generalized,
+@unpublished{wang_compositional_motion_primitives,
   title={Generalized Zero-Shot Skeleton Action Recognition with Compositional Motion-Attribute Primitives},
   author={Wang, Jinlong and Liu, Xuan and Lyu, Bin and Ge, Jinchao and Yu, Jiahui},
-  journal={Pattern Recognition},
-  year={2025}
+  note={Manuscript}
 }
 ```
 
----
+## License and acknowledgments
 
-## License
-
-This project is licensed under the MIT License.
-
----
-
-## Acknowledgments
-
-- [Shift-GCN](https://github.com/liu-zhy/Shift-GCN) for skeleton encoding
-- [CLIP](https://github.com/openai/CLIP) for text encoder
+This project is distributed under the [MIT License](LICENSE). The backbone follows the spatial and temporal shift operations of [Shift-GCN](https://github.com/kchengiva/Shift-GCN). The text encoder uses [CLIP](https://github.com/openai/CLIP).

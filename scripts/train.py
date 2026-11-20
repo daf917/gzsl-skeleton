@@ -1,262 +1,169 @@
-# Training script for GZSL skeleton action recognition
+"""Train the aligned recognition model for one GZSL class split."""
 
 import argparse
-import os
-import sys
-import yaml
-import torch
-import torch.nn as nn
-from torch.utils.data import DataLoader
-from tqdm import tqdm
-import logging
-
 from pathlib import Path
+import sys
 
-# Add project root to path
-project_root = Path(__file__).parent.parent
-sys.path.insert(0, str(project_root))
+import numpy as np
+import torch
+from torch.utils.data import DataLoader, Subset
+from tqdm import tqdm
+import yaml
 
-from models import GZSLModel
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 from data import create_dataset, GZSLSplit
-from utils import GZSLEvaluator
+from data.text_prompts import load_class_prompts
+from models import GZSLModel
 
 
-def setup_logging(log_dir: str):
-    """Setup logging"""
-    os.makedirs(log_dir, exist_ok=True)
-    
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.FileHandler(os.path.join(log_dir, 'train.log')),
-            logging.StreamHandler()
-        ]
+def add_split_arguments(parser):
+    parser.add_argument('--config', default='config/config.yaml')
+    parser.add_argument('--split-protocol', choices=('random', 'provided'), default='random')
+    parser.add_argument('--split-index', type=int, choices=(1, 2, 3), default=1)
+    parser.add_argument('--data-file', help='Preprocessed skeleton NPZ for this split.')
+
+
+def load_config(config_path):
+    with open(config_path, encoding='utf-8') as file:
+        return yaml.safe_load(file)
+
+
+def load_seen_training_data(config, args):
+    dataset_config = config['dataset']
+    dataset_name = dataset_config['name']
+    manifest = GZSLSplit(
+        dataset_name, args.split_protocol, args.split_index, split_dir=dataset_config.get('split_dir'),
     )
-    
-    return logging.getLogger(__name__)
-
-
-def load_config(config_path: str) -> dict:
-    """Load configuration from YAML file"""
-    with open(config_path, 'r') as f:
-        config = yaml.safe_load(f)
-    return config
-
-
-def train_epoch(model, dataloader, optimizer, device, config, class_names, part_descriptions):
-    """Train for one epoch"""
-    model.train()
-    
-    total_loss = 0.0
-    loss_components = {
-        'global_align': 0.0,
-        'part_align': 0.0,
-        'consistency': 0.0,
-        'independence': 0.0
+    seen_classes = manifest.get_seen_classes()
+    unseen_classes = manifest.get_unseen_classes()
+    split = {
+        'dataset': dataset_name,
+        'protocol': args.split_protocol,
+        'split_index': args.split_index,
+        'seen_classes': list(seen_classes),
+        'unseen_classes': list(unseen_classes),
     }
-    
-    pbar = tqdm(dataloader, desc='Training')
-    
-    for batch_idx, (skeleton, labels) in enumerate(pbar):
+    dataset = create_dataset(
+        dataset_name, dataset_config['data_dir'], split='train',
+        data_file=args.data_file or dataset_config.get('data_file'),
+    )
+    labels = np.asarray(dataset.labels)
+    indices = np.flatnonzero(np.isin(labels, seen_classes))
+    missing = sorted(set(seen_classes) - set(labels[indices].tolist()))
+    if missing:
+        raise ValueError(f'No training samples for seen class IDs {missing}.')
+    sample, _ = dataset[int(indices[0])]
+    dataset_config['num_joints'] = sample.shape[-2]
+    dataset_config['num_classes'] = len(seen_classes) + len(unseen_classes)
+    return Subset(dataset, indices.tolist()), split
+
+
+def split_output_dir(config, split):
+    return (Path(config['logging']['checkpoint_dir']) / split['dataset']
+            / f"{split['protocol']}_split_{split['split_index']}")
+
+
+def save_checkpoint(payload, path):
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + '.tmp')
+    torch.save(payload, temporary)
+    temporary.replace(path)
+
+
+@torch.no_grad()
+def fit_motion_statistics(model, dataloader, device):
+    total = torch.zeros(8, dtype=torch.float64, device=device)
+    squares = torch.zeros_like(total)
+    count = 0
+    for skeleton, _ in tqdm(dataloader, desc='Motion statistics'):
+        attrs = model.extract_motion_attributes(skeleton.to(device), normalize=False)
+        values = attrs.reshape(-1, 8).double()
+        total += values.sum(0)
+        squares += values.square().sum(0)
+        count += values.shape[0]
+    mean = total / count
+    std = (squares / count - mean.square()).clamp_min(0).sqrt()
+    model.set_motion_attribute_statistics(mean, std)
+
+
+def train_epoch(model, dataloader, optimizer, device, class_names, part_descriptions, seen_classes):
+    model.train()
+    loss_total = 0.0
+    for skeleton, labels in tqdm(dataloader, desc='Training'):
         skeleton = skeleton.to(device)
         labels = labels.to(device)
-        
-        # Forward pass
-        outputs = model.forward(skeleton)
-        
-        # Compute loss
-        loss, loss_dict = model.compute_loss(
-            outputs,
-            labels,
-            class_names,
-            part_descriptions
+        optimizer.zero_grad(set_to_none=True)
+        outputs = model(skeleton)
+        loss, _ = model.compute_loss(
+            outputs, labels, class_names, part_descriptions, seen_classes=seen_classes,
         )
-        
-        # Backward pass
-        optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        
-        # Accumulate losses
-        total_loss += loss.item()
-        for k, v in loss_dict.items():
-            if k != 'total':
-                loss_components[k] += v
-        
-        # Update progress bar
-        pbar.set_postfix({'loss': loss.item()})
-    
-    # Average losses
-    num_batches = len(dataloader)
-    avg_loss = total_loss / num_batches
-    avg_components = {k: v / num_batches for k, v in loss_components.items()}
-    
-    return avg_loss, avg_components
-
-
-def validate(model, dataloader, evaluator, device, text_features_global):
-    """Validate model"""
-    model.eval()
-    
-    all_preds = []
-    all_labels = []
-    all_scores = []
-    
-    with torch.no_grad():
-        for skeleton, labels in tqdm(dataloader, desc='Validation'):
-            skeleton = skeleton.to(device)
-            labels = labels.to(device)
-            
-            # Get predictions
-            outputs = model.forward(skeleton)
-            scores = outputs['global_composed'] @ text_features_global.T
-            
-            preds = scores.argmax(dim=-1)
-            
-            all_preds.append(preds.cpu())
-            all_labels.append(labels.cpu())
-            all_scores.append(scores.cpu())
-    
-    # Concatenate
-    all_preds = torch.cat(all_preds)
-    all_labels = torch.cat(all_labels)
-    all_scores = torch.cat(all_scores)
-    
-    # Compute metrics
-    metrics = evaluator.evaluate_scores(all_labels, all_scores)
-    
-    return metrics
+        loss_total += loss.item()
+    return loss_total / len(dataloader)
 
 
 def main(args):
-    # Load config
     config = load_config(args.config)
-    
-    # Setup logging
-    logger = setup_logging(config['logging']['log_dir'])
-    logger.info(f"Starting training with config: {config}")
-    
-    # Set device
-    device = torch.device(config['training']['device'] if torch.cuda.is_available() else 'cpu')
-    logger.info(f"Using device: {device}")
-    
-    # Create dataset
-    dataset_name = config['dataset']['name']
-    split = GZSLSplit(dataset_name)
-    
-    seen_classes = split.get_seen_classes()
-    unseen_classes = split.get_unseen_classes()
-    
-    logger.info(f"Seen classes: {len(seen_classes)}, Unseen classes: {len(unseen_classes)}")
-    
-    # Create data loaders
-    train_dataset = create_dataset(
-        dataset_name=dataset_name,
-        data_dir=config['dataset']['data_dir'],
-        split='train'
+    training = config['training']
+    dataset, split = load_seen_training_data(config, args)
+    output_dir = split_output_dir(config, split)
+    encoder_config = config.setdefault('skeleton_encoder', {})
+    pretrained_path = Path(
+        args.shift_gcn_checkpoint or encoder_config.get('shift_gcn_pretrained')
+        or output_dir / 'shift_gcn.pth',
     )
-    
-    val_dataset = create_dataset(
-        dataset_name=dataset_name,
-        data_dir=config['dataset']['data_dir'],
-        split='val'
-    )
-    
-    train_loader = DataLoader(
-        train_dataset,
-        batch_size=config['training']['batch_size'],
-        shuffle=True,
-        num_workers=config['training']['num_workers']
-    )
-    
-    val_loader = DataLoader(
-        val_dataset,
-        batch_size=config['training']['batch_size'],
-        shuffle=False,
-        num_workers=config['training']['num_workers']
-    )
-    
-    # Create model
-    model = GZSLModel(config)
-    model = model.to(device)
-    
-    logger.info(f"Model created with {sum(p.numel() for p in model.parameters())} parameters")
-    
-    # Create optimizer
-    optimizer = torch.optim.AdamW(
-        model.parameters(),
-        lr=config['training']['learning_rate'],
-        weight_decay=config['training']['weight_decay']
-    )
-    
-    # Create scheduler
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-        optimizer,
-        T_max=config['training']['num_epochs']
-    )
-    
-    # Create evaluator
-    evaluator = GZSLEvaluator(seen_classes, unseen_classes)
-    
-    # Class names and part descriptions can be supplied by the released prompt files.
-    class_names = {}
-    part_descriptions = {}
-    text_features_global = None
-    
-    # Training loop
-    best_hm = 0.0
-    
-    for epoch in range(config['training']['num_epochs']):
-        logger.info(f"\nEpoch {epoch+1}/{config['training']['num_epochs']}")
-        
-        # Train
-        train_loss, train_components = train_epoch(
-            model, train_loader, optimizer, device, config,
-            class_names, part_descriptions
+    if not pretrained_path.is_file():
+        raise FileNotFoundError(
+            f'{pretrained_path} is missing. Run scripts/pretrain_shift_gcn.py for the same split.',
         )
-        
-        logger.info(f"Train Loss: {train_loss:.4f}")
-        for k, v in train_components.items():
-            logger.info(f"  {k}: {v:.4f}")
-        
-        # Validate
-        if (epoch + 1) % config['evaluation']['test_interval'] == 0:
-            val_metrics = validate(model, val_loader, evaluator, device, text_features_global)
-            
-            logger.info(f"Validation Metrics:")
-            logger.info(f"  Acc_s: {val_metrics['Acc_s']:.2f}")
-            logger.info(f"  Acc_u: {val_metrics['Acc_u']:.2f}")
-            logger.info(f"  HM: {val_metrics['HM']:.2f}")
-            
-            # Save best model
-            if val_metrics['HM'] > best_hm:
-                best_hm = val_metrics['HM']
-                
-                checkpoint_path = os.path.join(
-                    config['logging']['checkpoint_dir'],
-                    'best_model.pth'
-                )
-                
-                torch.save({
-                    'epoch': epoch,
-                    'model_state_dict': model.state_dict(),
-                    'optimizer_state_dict': optimizer.state_dict(),
-                    'metrics': val_metrics
-                }, checkpoint_path)
-                
-                logger.info(f"Saved best model with HM: {best_hm:.2f}")
-        
-        # Step scheduler
+    pretrained = torch.load(pretrained_path, map_location='cpu', weights_only=True)
+    if (pretrained.get('split') != split
+            or pretrained.get('num_joints') != config['dataset']['num_joints']):
+        raise ValueError('The Shift-GCN checkpoint does not match this dataset and class split.')
+    encoder_config['shift_gcn_pretrained'] = None
+
+    device = torch.device(training['device'] if torch.cuda.is_available() else 'cpu')
+    model = GZSLModel(config).to(device)
+    model.skeleton_encoder.shift_gcn.load_state_dict(pretrained['backbone_state_dict'])
+    seen_classes = split['seen_classes']
+    class_names, part_descriptions = load_class_prompts(
+        split['dataset'], seen_classes, config.get('prompt', {}).get('descriptions_dir'),
+    )
+    loader_options = {
+        'batch_size': training['batch_size'], 'num_workers': training['num_workers'],
+    }
+    fit_motion_statistics(model, DataLoader(dataset, **loader_options), device)
+    dataloader = DataLoader(dataset, shuffle=True, **loader_options)
+    optimizer = torch.optim.AdamW(
+        (parameter for parameter in model.parameters() if parameter.requires_grad),
+        lr=training['learning_rate'], weight_decay=training['weight_decay'],
+    )
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, training['num_epochs'])
+    for epoch in range(1, training['num_epochs'] + 1):
+        average_loss = train_epoch(
+            model, dataloader, optimizer, device, class_names, part_descriptions, seen_classes,
+        )
+        print(f'Epoch {epoch}/{training["num_epochs"]}: loss={average_loss:.4f}')
         scheduler.step()
-    
-    logger.info("Training completed!")
+
+    checkpoint_path = Path(args.output) if args.output else output_dir / 'model.pth'
+    save_checkpoint({
+        'epoch': training['num_epochs'],
+        'config': config,
+        'split': split,
+        'attribute_mean': model.attr_mean.cpu(),
+        'attribute_std': model.attr_std.cpu(),
+        'model_state_dict': model.state_dict(),
+    }, checkpoint_path)
+    print(f'Saved {checkpoint_path}')
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Train GZSL model')
-    parser.add_argument('--config', type=str, default='config/config.yaml',
-                       help='Path to config file')
-    args = parser.parse_args()
-    
-    main(args)
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
+    add_split_arguments(parser)
+    parser.add_argument('--shift-gcn-checkpoint', help='Pretraining checkpoint for this split.')
+    parser.add_argument('--output', help='Output checkpoint path.')
+    main(parser.parse_args())

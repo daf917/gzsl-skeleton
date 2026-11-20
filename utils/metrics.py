@@ -1,8 +1,39 @@
 # Evaluation metrics for GZSL
 
-import torch
+from __future__ import annotations
+
+from numbers import Real
+from statistics import mean
+from typing import TYPE_CHECKING, Dict, List, Mapping, Sequence, Tuple
+
 import numpy as np
-from typing import Dict, List, Tuple
+
+if TYPE_CHECKING:
+    import torch
+
+
+def _harmonic_mean(acc_s: float, acc_u: float) -> float:
+    total = acc_s + acc_u
+    return 2 * acc_s * acc_u / total if total > 0 else 0.0
+
+
+def aggregate_gzsl_metrics(split_metrics: Sequence[Mapping[str, float]]) -> Dict[str, float]:
+    """Compute HM from the mean accuracies of the three splits of one protocol."""
+    if len(split_metrics) != 3:
+        raise ValueError("Exactly three split results are required.")
+
+    values = {}
+    for key in ("Acc_s", "Acc_u"):
+        accuracies = [result[key] for result in split_metrics]
+        if any(
+            isinstance(value, bool) or not isinstance(value, Real) or not 0 <= value <= 100
+            for value in accuracies
+        ):
+            raise ValueError(f"{key} must be a numeric percentage from 0 to 100.")
+        values[key] = mean(float(value) for value in accuracies)
+
+    values["HM"] = _harmonic_mean(values["Acc_s"], values["Acc_u"])
+    return values
 
 
 def compute_acc(y_true: torch.Tensor, y_pred: torch.Tensor) -> float:
@@ -37,6 +68,8 @@ def compute_gzsl_metrics(y_true: torch.Tensor,
     Returns:
         Dictionary with Acc_s, Acc_u, and HM
     """
+    import torch
+
     # Convert to numpy for easier processing
     y_true = y_true.cpu().numpy()
     y_pred = y_pred.cpu().numpy()
@@ -61,11 +94,7 @@ def compute_gzsl_metrics(y_true: torch.Tensor,
     else:
         acc_u = 0.0
     
-    # Compute harmonic mean
-    if acc_s + acc_u > 0:
-        hm = 2 * acc_s * acc_u / (acc_s + acc_u)
-    else:
-        hm = 0.0
+    hm = _harmonic_mean(acc_s, acc_u)
     
     return {
         'Acc_s': acc_s,
@@ -212,6 +241,8 @@ class GZSLEvaluator:
         Returns:
             Calibrated scores
         """
+        import torch
+
         calibrated = y_scores.clone()
         
         # Apply gamma to seen classes
@@ -239,7 +270,7 @@ class GZSLEvaluator:
             gamma_range = [i * 0.1 for i in range(-20, 21)]
         
         best_gamma = 0.0
-        best_hm = 0.0
+        best_hm = -1.0
         best_metrics = {}
         
         for gamma in gamma_range:
@@ -255,6 +286,8 @@ class GZSLEvaluator:
 
 
 if __name__ == "__main__":
+    import torch
+
     # Test metrics
     y_true = torch.tensor([0, 0, 1, 1, 2, 2])
     y_pred = torch.tensor([0, 0, 1, 0, 2, 2])

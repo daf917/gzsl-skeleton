@@ -226,14 +226,66 @@ def create_text_features_from_prompts(prompts: Dict, text_encoder, device: str =
     }
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Export released prompt inputs and descriptions for GZSL')
-    parser.add_argument('--dataset', type=str, default='ntu60',
-                       choices=['ntu60', 'ntu120', 'pku_mmd', 'ucf101', 'hmdb51'],
-                       help='Dataset name')
-    parser.add_argument('--output', type=str, default='data/prompts/',
-                       help='Output directory')
-    args = parser.parse_args()
+def generate_descriptions(dataset, output_path, classes_path=None, *, client=None):
+    """Generate class descriptions offline with the manuscript's decoding settings."""
+    if classes_path is None:
+        source = Path(__file__).resolve().parents[1] / 'data' / 'prompts' / f'{dataset}.json'
+    else:
+        source = Path(classes_path)
+    rows = json.loads(source.read_text(encoding='utf-8'))
+    if not isinstance(rows, list) or not rows:
+        raise ValueError('The class file must contain a nonempty JSON array.')
+    classes = []
+    for index, row in enumerate(rows):
+        if isinstance(row, str):
+            class_id, action = index, row
+        else:
+            class_id, action = row['class_id'], row['action_class']
+        if type(class_id) is not int or class_id < 0 or not isinstance(action, str) or not action.strip():
+            raise ValueError('Each class needs a nonnegative integer ID and a nonempty action name.')
+        classes.append((class_id, action))
+    if len({class_id for class_id, _ in classes}) != len(classes):
+        raise ValueError('Class IDs must be unique.')
+    if client is None:
+        from openai import OpenAI
+        client = OpenAI()
+    generator = PromptGenerator()
+    descriptions = []
+    for class_id, action in tqdm(classes, desc=f'Generating {dataset} descriptions'):
+        entry = {'class_id': class_id, 'action_class': action}
+        for part, key in BODY_PART_KEYS.items():
+            result = client.chat.completions.create(
+                model='gpt-4o-mini',
+                messages=[{'role': 'user', 'content': generator.generate_single_prompt(action, part)}],
+                temperature=0,
+                top_p=1.0,
+                max_tokens=80,
+            )
+            content = result.choices[0].message.content or ''
+            normalized = ' '.join(content.split())
+            if not normalized:
+                raise ValueError(f'Empty description for class {class_id}, {part}.')
+            entry[key] = normalized
+        descriptions.append(entry)
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(descriptions, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 
-    output_path = os.path.join(args.output, f"{args.dataset}_prompt_inputs.json")
-    export_released_prompt_inputs(args.dataset, output_path)
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Export or generate class body-part descriptions')
+    parser.add_argument('--dataset', default='ntu60')
+    parser.add_argument('--output', default='data/prompts/', help='Output directory for prompt-input export')
+    parser.add_argument('--generate', type=Path, metavar='DESCRIPTIONS_JSON',
+                        help='Generate fresh descriptions to a specified JSON file using the OpenAI API')
+    parser.add_argument('--classes', type=Path, help='Optional JSON array of class names or labelled records')
+    args = parser.parse_args()
+    if args.generate is not None:
+        if args.generate.exists():
+            parser.error('--generate must name a new file')
+        generate_descriptions(args.dataset, args.generate, args.classes)
+    elif args.classes is not None:
+        parser.error('--classes requires --generate')
+    else:
+        output_path = os.path.join(args.output, f'{args.dataset}_prompt_inputs.json')
+        export_released_prompt_inputs(args.dataset, output_path)

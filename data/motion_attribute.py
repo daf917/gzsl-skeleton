@@ -17,7 +17,6 @@ Each body part is characterized by an 8-dimensional motion attribute vector:
 """
 
 import torch
-import numpy as np
 from typing import Tuple, Dict, List
 
 
@@ -60,7 +59,7 @@ def compute_compactness(points: torch.Tensor, centroid: torch.Tensor) -> Tuple[t
     distances = torch.norm(points - centroid.unsqueeze(-2), dim=-1)  # (N,) or (batch, N)
     
     mean = torch.mean(distances, dim=-1)  # () or (batch,)
-    variance = torch.var(distances, dim=-1, unbiased=True)  # () or (batch,)
+    variance = torch.var(distances, dim=-1, unbiased=False)  # () or (batch,)
     
     return mean, variance
 
@@ -94,110 +93,45 @@ def compute_pca_features(points: torch.Tensor, centroid: torch.Tensor) -> Tuple[
     Returns:
         Tuple of (eigenvalue_ratio, principal_angle)
     """
-    # Center the points
-    centered = points - centroid.unsqueeze(-2)  # (N, 2) or (batch, N, 2)
-    
-    # Compute covariance matrix
-    if centered.dim() == 2:
-        # Single sample: (N, 2) -> (2, 2)
-        cov = torch.matmul(centered.T, centered) / (centered.shape[0] - 1)
-    else:
-        # Batch: (batch, N, 2) -> (batch, 2, 2)
-        centered_t = centered.transpose(-2, -1)
-        cov = torch.matmul(centered_t, centered) / (centered.shape[-2] - 1)
-    
-    # Eigendecomposition
-    eigenvalues, eigenvectors = torch.linalg.eigh(cov)  # (2,) or (batch, 2), (2, 2) or (batch, 2, 2)
-    
-    # Sort eigenvalues in descending order
-    eigenvalues = torch.sort(eigenvalues, descending=True)[0]
-    
-    # Eigenvalue ratio (with epsilon for stability)
-    eps = 1e-8
-    eigenvalue_ratio = eigenvalues[..., 0] / (eigenvalues[..., 1] + eps)
-    
-    # Principal angle with reference direction (1, 0) i.e., x-axis
-    principal_vector = eigenvectors[..., :, 0]  # (2,) or (batch, 2)
-    reference = torch.tensor([1.0, 0.0], device=points.device, dtype=points.dtype)
-    if principal_vector.dim() > 1:
-        reference = reference.unsqueeze(0).expand_as(principal_vector)
-    
-    principal_angle = torch.acos(torch.clamp(
-        torch.sum(principal_vector * reference, dim=-1), 
-        min=-1.0, max=1.0
-    ))
-    
+    centered = points - centroid.unsqueeze(-2)
+    covariance = centered.transpose(-2, -1) @ centered / centered.shape[-2]
+
+    # torch.linalg.eigh returns eigenvalues in ascending order with matching columns.
+    eigenvalues, eigenvectors = torch.linalg.eigh(covariance)
+    eigenvalues = eigenvalues.clamp_min(0.0)
+    eigenvalue_ratio = eigenvalues[..., -1] / (eigenvalues[..., -2] + 1e-8)
+
+    # Projection onto the fixed x-axis. Its magnitude discards eigenvector sign.
+    principal_projection = eigenvectors[..., 0, -1].abs().clamp_max(1.0)
+    principal_angle = torch.acos(principal_projection)
+
     return eigenvalue_ratio, principal_angle
 
 
-def compute_velocity_acceleration(centroids: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
-    """
-    Compute velocity and acceleration magnitudes from centroid trajectory.
-    
-    Args:
-        centroids: Tensor of shape (T, 2) or (batch, T, 2)
-        
-    Returns:
-        Tuple of (velocity_magnitude, acceleration_magnitude)
-    """
-    if centroids.dim() == 2:
-        centroids = centroids.unsqueeze(0)
-        squeeze_output = True
-    else:
-        squeeze_output = False
-    
-    batch_size, T = centroids.shape[:2]
-    
-    # Velocity: v(t) = c(t) - c(t-1)
-    velocity = centroids[:, 1:] - centroids[:, :-1]  # (batch, T-1, 2)
-    
-    # Acceleration: a(t) = c(t) - 2c(t-1) + c(t-2)
-    accel = (centroids[:, 2:] - 2 * centroids[:, 1:-1] + centroids[:, :-2])  # (batch, T-2, 2)
-    
-    # Magnitudes
-    velocity_mag = torch.norm(velocity, dim=-1)  # (batch, T-1)
-    accel_mag = torch.norm(accel, dim=-1)  # (batch, T-2)
-    
-    # Average magnitudes
-    velocity_mag = torch.mean(velocity_mag, dim=-1)  # (batch,)
-    accel_mag = torch.mean(accel_mag, dim=-1)  # (batch,)
-    
-    if squeeze_output:
-        velocity_mag = velocity_mag.squeeze(0)
-        accel_mag = accel_mag.squeeze(0)
-    
-    return velocity_mag, accel_mag
+def compute_velocity_acceleration(
+    centroids: torch.Tensor, temporal_window: int = 10
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """Return trailing-window means of per-frame velocity and acceleration magnitudes."""
+    if temporal_window < 1:
+        raise ValueError("The temporal window must be at least one frame.")
+    previous = torch.cat((centroids[..., :1, :], centroids[..., :-1, :]), dim=-2)
+    before_previous = torch.cat((previous[..., :1, :], previous[..., :-1, :]), dim=-2)
+    velocity = (centroids - previous).norm(dim=-1)
+    acceleration = (centroids - 2 * previous + before_previous).norm(dim=-1)
+
+    magnitudes = torch.stack((velocity, acceleration), dim=-2)
+    prefix = torch.cat((torch.zeros_like(magnitudes[..., :1]), magnitudes.cumsum(dim=-1)), dim=-1)
+    end = torch.arange(1, centroids.size(-2) + 1, device=centroids.device)
+    start = (end - temporal_window).clamp_min(0)
+    averages = (prefix[..., 1:] - prefix.index_select(-1, start)) / (end - start)
+    return averages.unbind(dim=-2)
 
 
 def compute_relative_deformation(points: torch.Tensor, centroids: torch.Tensor) -> torch.Tensor:
-    """
-    Compute relative deformation magnitude (frame-to-frame internal deformation).
-    
-    Args:
-        points: Tensor of shape (T, N, 2)
-        centroids: Tensor of shape (T, 2)
-        
-    Returns:
-        Relative deformation magnitude
-    """
-    T, N = points.shape[:2]
-    
-    if T < 2:
-        return torch.tensor(0.0, device=points.device)
-    
-    # Relative positions
-    rel_pos = points - centroids.unsqueeze(1)  # (T, N, 2)
-    
-    # Frame-to-frame difference
-    rel_diff = rel_pos[1:] - rel_pos[:-1]  # (T-1, N, 2)
-    
-    # Magnitude
-    diff_mag = torch.norm(rel_diff, dim=-1)  # (T-1, N)
-    
-    # Average
-    deformation = torch.mean(diff_mag)  # scalar
-    
-    return deformation
+    """Return per-frame mean joint deformation relative to the part centroid."""
+    relative = points - centroids.unsqueeze(-2)
+    previous = torch.cat((relative[..., :1, :, :], relative[..., :-1, :, :]), dim=-3)
+    return (relative - previous).norm(dim=-1).mean(dim=-1)
 
 
 class MotionAttributeExtractor:
@@ -226,78 +160,33 @@ class MotionAttributeExtractor:
         Compute motion attributes for a single body part.
         
         Args:
-            skeleton: Skeleton sequence of shape (T, J, 2) or (T, J, 3)
+            skeleton: Skeletons of shape (T, J, 2) or (B, T, J, 2), optionally with a third channel.
             part_idx: Index of the body part (0-5)
             
         Returns:
-            Motion attribute tensor of shape (T, 8)
+            Motion attributes of shape (T, 8) or (B, T, 8).
         """
-        # Take only x, y coordinates if 3D
-        if skeleton.shape[-1] == 3:
-            skeleton = skeleton[..., :2]
-        
-        T, J = skeleton.shape[:2]
-        
-        # Get joint indices for this part
         joint_indices = self.part_joints[part_idx]
-        part_points = skeleton[:, joint_indices, :]  # (T, N_p, 2)
-        
-        # Initialize attribute tensor
-        attributes = torch.zeros(T, 8, device=skeleton.device, dtype=skeleton.dtype)
-        
-        for t in range(T):
-            points = part_points[t]  # (N_p, 2)
-            N_p = points.shape[0]
-            
-            # 1. Centroid
-            centroid = compute_part_centroid(points)  # (2,)
-            
-            # 2. Compactness mean and variance
-            d_mu, d_sigma = compute_compactness(points, centroid)
-            
-            # 3. Spatial extent
-            e = compute_spatial_extent(points)
-            
-            # 4. PCA features
-            rho, theta = compute_pca_features(points, centroid)
-            
-            # Store spatial features (first 5 dimensions)
-            attributes[t, 0] = d_mu
-            attributes[t, 1] = d_sigma
-            attributes[t, 2] = e
-            attributes[t, 3] = rho
-            attributes[t, 4] = theta
-        
-        # Temporal features (require trajectory)
-        if T >= 2:
-            # Get centroids over time
-            centroids_list = []
-            for t in range(T):
-                points = part_points[t]
-                centroid = compute_part_centroid(points)
-                centroids_list.append(centroid)
-            centroids = torch.stack(centroids_list, dim=0)  # (T, 2)
-            
-            # Velocity and acceleration
-            velocity_mag, accel_mag = compute_velocity_acceleration(centroids)
-            attributes[:, 5] = velocity_mag
-            attributes[:, 6] = accel_mag
-            
-            # Relative deformation
-            deformation = compute_relative_deformation(part_points, centroids)
-            attributes[:, 7] = deformation
-        
-        return attributes
-    
+        if not joint_indices:
+            raise ValueError(f"No joints assigned to part {part_idx}.")
+        part_points = skeleton[..., joint_indices, :2]
+        centroids = compute_part_centroid(part_points)
+        d_mu, d_sigma = compute_compactness(part_points, centroids)
+        extent = compute_spatial_extent(part_points)
+        ratio, angle = compute_pca_features(part_points, centroids)
+        velocity, acceleration = compute_velocity_acceleration(centroids, self.temporal_window)
+        deformation = compute_relative_deformation(part_points, centroids)
+        return torch.stack((d_mu, d_sigma, extent, ratio, angle, velocity, acceleration, deformation), dim=-1)
+
     def compute_all_parts(self, skeleton: torch.Tensor) -> torch.Tensor:
         """
         Compute motion attributes for all body parts.
         
         Args:
-            skeleton: Skeleton sequence of shape (T, J, 2) or (T, J, 3)
+            skeleton: Skeletons of shape (T, J, 2) or (B, T, J, 2), optionally with a third channel.
             
         Returns:
-            Motion attribute tensor of shape (T, P, 8)
+            Motion attributes of shape (T, P, 8) or (B, T, P, 8).
         """
         all_attributes = []
         
@@ -305,7 +194,7 @@ class MotionAttributeExtractor:
             part_attr = self.compute_attributes(skeleton, part_idx)
             all_attributes.append(part_attr)
         
-        attributes = torch.stack(all_attributes, dim=1)  # (T, P, 8)
+        attributes = torch.stack(all_attributes, dim=-2)
         
         return attributes
     
@@ -323,26 +212,12 @@ class MotionAttributeExtractor:
         Returns:
             Tuple of (normalized_attributes, mean, std)
         """
-        if attributes.dim() == 3:
-            # (T, P, 8) -> reshape for normalization
-            original_shape = attributes.shape
-            attributes_flat = attributes.view(-1, 8)  # (T*P, 8)
-        else:
-            original_shape = attributes.shape
-            attributes_flat = attributes.view(-1, 8)
-        
+        attributes_flat = attributes.reshape(-1, 8)
         if mean is None:
-            mean = torch.mean(attributes_flat, dim=0)
+            mean = attributes_flat.mean(dim=0)
         if std is None:
-            std = torch.std(attributes_flat, dim=0)
-        
-        # Normalize
-        normalized = (attributes_flat - mean) / (std + self.eps)
-        
-        # Reshape back
-        normalized = normalized.view(original_shape)
-        
-        return normalized, mean, std
+            std = attributes_flat.std(dim=0, unbiased=False)
+        return (attributes - mean) / (std + self.eps), mean, std
 
 
 def create_part_joint_mapping(num_joints: int) -> Dict[int, List[int]]:

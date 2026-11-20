@@ -3,6 +3,8 @@ Aggregation Module
 Composes part-level features into a global representation using attention
 """
 
+from typing import Tuple
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -62,52 +64,32 @@ class PrimitiveAggregation(nn.Module):
         return aggregated, attention_weights
 
 
-class PrimitiveIndependenceRegularizer(nn.Module):
-    """
-    Enforces independence between different primitive (part) features
-    Penalizes off-diagonal correlations between primitive features
-    """
-    
-    def __init__(self):
-        super().__init__()
-        
+class PrimitiveDecorrelationRegularizer(nn.Module):
+    """Penalize squared off-diagonal batch correlations between primitive features."""
+
     def forward(self, part_features: torch.Tensor) -> torch.Tensor:
         """
-        Compute independence regularization loss
-        
         Args:
-            part_features: Part-level features (B, P, D)
-            
+            part_features: Part-level features (B, P, D).
+
         Returns:
-            Independence loss scalar
+            Sum of squared off-diagonal correlations as in the paper.
         """
-        B, P, D = part_features.shape
-        
-        # Mean-center each primitive feature across batch
-        mean = part_features.mean(dim=0, keepdim=True)  # (1, P, D)
-        centered = part_features - mean  # (B, P, D)
-        
-        # Normalize
-        norms = centered.norm(dim=-1, keepdim=True)  # (B, P, 1)
-        # Avoid division by zero
-        norms = torch.clamp(norms, min=1e-8)
-        normalized = centered / norms  # (B, P, D)
-        
-        # Compute pairwise similarities (off-diagonal correlations)
-        # Similarity matrix: (P, P)
-        similarity = torch.mean(
-            torch.bmm(normalized, normalized.transpose(-2, -1)),
-            dim=0
-        )  # (P, P)
-        
-        # Penalize off-diagonal elements
-        # Create mask to exclude diagonal
-        mask = 1.0 - torch.eye(P, device=part_features.device)
-        
-        loss = (similarity ** 2) * mask
-        loss = loss.sum() / (P * (P - 1))  # Average over off-diagonal
-        
-        return loss
+        num_parts = part_features.size(1)
+        centered = part_features - part_features.mean(dim=0, keepdim=True)
+        eps = max(1e-8, torch.finfo(centered.dtype).tiny)
+        normalized = F.normalize(centered, p=2, dim=-1, eps=eps)
+        correlations = (normalized @ normalized.transpose(-2, -1)).mean(dim=0)
+        diagonal = torch.eye(num_parts, dtype=torch.bool, device=part_features.device)
+        return correlations.masked_fill(diagonal, 0.0).square().sum()
+
+
+class PrimitiveIndependenceRegularizer(PrimitiveDecorrelationRegularizer):
+    """Legacy API returning the mean off-diagonal squared correlation."""
+
+    def forward(self, part_features: torch.Tensor) -> torch.Tensor:
+        num_parts = part_features.size(1)
+        return super().forward(part_features) / max(num_parts * (num_parts - 1), 1)
 
 
 class GlobalConsistencyLoss(nn.Module):
@@ -140,133 +122,45 @@ class GlobalConsistencyLoss(nn.Module):
 
 
 class AlignmentLoss(nn.Module):
-    """
-    Cross-modal alignment losses (InfoNCE-style contrastive loss)
-    for both global and primitive-level alignment
-    """
-    
+    """Compare skeletal features with one text anchor per seen class."""
+
     def __init__(self, temperature: float = 0.07):
-        """
-        Args:
-            temperature: Temperature parameter for contrastive loss
-        """
         super().__init__()
         self.temperature = temperature
-    
+
     def primitive_level_alignment(
-        self, 
-        skeleton_features: torch.Tensor, 
+        self,
+        skeleton_features: torch.Tensor,
         text_features: torch.Tensor,
-        labels: torch.Tensor
+        labels: torch.Tensor,
     ) -> torch.Tensor:
-        """
-        Primitive-level alignment loss
-        
-        Args:
-            skeleton_features: Part-level skeleton features (B, P, D)
-            text_features: Part-level text features (B, P, D)
-            labels: Class labels (B,)
-            
-        Returns:
-            Alignment loss
-        """
-        B, P, D = skeleton_features.shape
-        
-        # Reshape for contrastive loss
-        skeleton_flat = skeleton_features.view(B * P, D)  # (B*P, D)
-        text_flat = text_features.view(B * P, D)  # (B*P, D)
-        
-        # Labels for each primitive (repeated P times)
-        labels_expanded = labels.repeat(P)  # (B*P,)
-        
-        return self._contrastive_loss(skeleton_flat, text_flat, labels_expanded, B * P)
-    
+        """Compare each sample and body part against that part for every seen class."""
+        scores = torch.einsum("bpd,cpd->bpc", skeleton_features, text_features)
+        scores = scores / self.temperature
+        targets = labels[:, None].expand(-1, skeleton_features.size(1))
+        return F.cross_entropy(scores.flatten(0, 1), targets.reshape(-1))
+
     def global_level_alignment(
         self,
         skeleton_global: torch.Tensor,
         text_global: torch.Tensor,
-        labels: torch.Tensor
-    ) -> torch.Tensor:
-        """
-        Global-level alignment loss
-        
-        Args:
-            skeleton_global: Global skeleton features (B, D)
-            text_global: Global text features (B, D)
-            labels: Class labels (B,)
-            
-        Returns:
-            Alignment loss
-        """
-        return self._contrastive_loss(skeleton_global, text_global, labels, labels.shape[0])
-    
-    def _contrastive_loss(
-        self, 
-        features1: torch.Tensor, 
-        features2: torch.Tensor, 
         labels: torch.Tensor,
-        batch_size: int
     ) -> torch.Tensor:
-        """
-        InfoNCE-style contrastive loss
-        
-        Args:
-            features1: First modality features (N, D)
-            features2: Second modality features (N, D)
-            labels: Ground truth labels (N,)
-            batch_size: Batch size
-            
-        Returns:
-            Contrastive loss
-        """
-        # Compute similarity matrix
-        similarity = torch.matmul(features1, features2.T) / self.temperature  # (N, N)
-        
-        # Create positive mask (same class)
-        labels = labels.contiguous().view(-1, 1)
-        mask = torch.eq(labels, labels.T).float()  # (N, N)
-        
-        # For numerical stability
-        logits_max, _ = similarity.max(dim=1, keepdim=True)
-        logits = similarity - logits_max.detach()
-        
-        # Mask out self-similarity
-        logits_mask = torch.ones_like(mask)
-        logits_mask.fill_diagonal_(0)
-        mask = mask * logits_mask
-        
-        # Compute log probability
-        exp_logits = torch.exp(logits) * logits_mask
-        log_prob = logits - torch.log(exp_logits.sum(dim=1, keepdim=True))
-        
-        # Mean log probability for positive pairs
-        mask_sum = mask.sum(dim=1)
-        mask_sum = torch.clamp(mask_sum, min=1e-8)
-        
-        mean_log_prob = (mask * log_prob).sum(dim=1) / mask_sum
-        
-        # Loss
-        loss = -mean_log_prob
-        
-        return loss.mean()
-    
+        """Compare each Shift-GCN feature against the global seen-class text anchors."""
+        scores = skeleton_global @ text_global.T / self.temperature
+        return F.cross_entropy(scores, labels)
+
     def forward(
         self,
         skeleton_global: torch.Tensor,
         skeleton_part: torch.Tensor,
         text_global: torch.Tensor,
         text_part: torch.Tensor,
-        labels: torch.Tensor
-    ) -> tuple:
-        """
-        Compute both global and primitive alignment losses
-        
-        Returns:
-            Tuple of (global_loss, primitive_loss)
-        """
+        labels: torch.Tensor,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Return global and primitive losses, with labels indexing text-anchor rows."""
         global_loss = self.global_level_alignment(skeleton_global, text_global, labels)
         primitive_loss = self.primitive_level_alignment(skeleton_part, text_part, labels)
-        
         return global_loss, primitive_loss
 
 
@@ -285,10 +179,9 @@ if __name__ == "__main__":
     print(f"Attention weights shape: {attention.shape}")
     print(f"Attention sum (should be 1): {attention.sum(dim=-1)}")
     
-    # Test independence regularizer
-    independence = PrimitiveIndependenceRegularizer()
-    ind_loss = independence(part_features)
-    print(f"\nIndependence loss: {ind_loss.item():.4f}")
+    decorrelation = PrimitiveDecorrelationRegularizer()
+    decorr_loss = decorrelation(part_features)
+    print(f"\nDecorrelation loss: {decorr_loss.item():.4f}")
     
     # Test alignment loss
     alignment = AlignmentLoss(temperature=0.07)

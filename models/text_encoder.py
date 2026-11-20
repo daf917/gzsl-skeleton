@@ -6,7 +6,7 @@ Implements the text branch with CLIP encoder and Local Text Encoder
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import Tuple, Optional
+from typing import Tuple
 import clip
 
 
@@ -62,30 +62,11 @@ class LocalTextEncoder(nn.Module):
         Returns:
             Refined part-level text features (B, P, D)
         """
-        B, P, D = part_features.shape
-        
-        # Project to hidden dimension if needed
-        if isinstance(self.output_proj, nn.Identity):
-            hidden_features = part_features
-        else:
-            hidden_features = self.output_proj(part_features)
-        
-        # Create queries from learnable part queries
-        queries = self.part_query.expand(B, -1, -1)  # (B, P, hidden_dim)
-        
-        # Cross-attention with part features as keys/values
-        refined, _ = self.cross_attention(
-            query=queries,
-            key=hidden_features,
-            value=hidden_features
-        )
-        
-        # Residual connection and FFN
-        hidden_features = self.norm1(hidden_features + refined)
-        hidden_features = hidden_features + self.ffn(hidden_features)
-        hidden_features = self.norm2(hidden_features)
-        
-        return hidden_features
+        part_tokens = self.norm1(self.output_proj(part_features))
+        queries = self.part_query + global_feature.unsqueeze(1)
+        refined, _ = self.cross_attention(queries, part_tokens, part_tokens, need_weights=False)
+        refined = queries + refined
+        return refined + self.ffn(self.norm2(refined))
 
 
 class TextEncoder(nn.Module):
@@ -109,9 +90,12 @@ class TextEncoder(nn.Module):
         
         self.num_parts = num_parts
         self.feature_dim = feature_dim
+        self.freeze_clip = freeze_clip
+        self._text_cache = {}
+        self.register_load_state_dict_post_hook(self._reset_text_cache)
         
         # Load CLIP model
-        self.clip_model, self.clip_preprocess = clip.load(clip_model_name)
+        self.clip_model, self.clip_preprocess = clip.load(clip_model_name, device='cpu')
         self.clip_dim = self.clip_model.text_projection.shape[-1]
         
         if freeze_clip:
@@ -132,76 +116,56 @@ class TextEncoder(nn.Module):
         else:
             self.global_proj = nn.Identity()
     
-    @torch.no_grad()
+    def _reset_text_cache(self, module, incompatible_keys):
+        self._text_cache.clear()
+
+    def train(self, mode: bool = True):
+        super().train(mode)
+        if self.freeze_clip:
+            self.clip_model.eval()
+        return self
+
+    def _encode_clip_batch(self, texts: list) -> torch.Tensor:
+        tokens = clip.tokenize(
+            texts, context_length=self.clip_model.context_length, truncate=True
+        ).to(self.clip_model.text_projection.device)
+        features = self.clip_model.encode_text(tokens).to(dtype=self.local_encoder.part_query.dtype)
+        return F.normalize(features, dim=-1)
+
     def encode_text(self, texts: list) -> torch.Tensor:
-        """
-        Encode text prompts using CLIP
-        
-        Args:
-            texts: List of text strings
-            
-        Returns:
-            CLIP text embeddings (N, D)
-        """
-        # Tokenize
-        text_tokens = clip.tokenize(texts).to(next(self.parameters()).device)
-        
-        # Encode
-        text_features = self.clip_model.encode_text(text_tokens)
-        text_features = text_features / text_features.norm(dim=-1, keepdim=True)
-        
-        return text_features
-    
-    def forward(self, 
-                part_texts: list,
-                global_text: str = None) -> Tuple[torch.Tensor, torch.Tensor]:
-        """
-        Forward pass
-        
-        Args:
-            part_texts: List of part-level text descriptions (P texts per class)
-            global_text: Optional global text description
-            
-        Returns:
-            Tuple of (global_text_features, part_text_features)
-                global_text_features: (B, D)
-                part_text_features: (B, P, D)
-        """
-        # Encode part-level texts
-        part_features_list = []
-        
-        # Batch encode part texts for efficiency
-        # Assuming part_texts is a list of lists: [class1_parts, class2_parts, ...]
-        if isinstance(part_texts[0], list):
-            # Multiple classes
-            for class_parts in part_texts:
-                with torch.no_grad():
-                    class_features = self.encode_text(class_parts)
-                part_features_list.append(class_features.unsqueeze(0))
-            part_features = torch.cat(part_features_list, dim=0)  # (B, P, D)
+        """Encode prompts under CLIP's fixed context length."""
+        if not self.freeze_clip:
+            return self._encode_clip_batch(texts)
+
+        # Only CLIP embeddings are fixed. The local text encoder is trained each step.
+        missing_texts = list(dict.fromkeys(text for text in texts if text not in self._text_cache))
+        with torch.no_grad():
+            for start in range(0, len(missing_texts), 64):
+                batch = missing_texts[start:start + 64]
+                self._text_cache.update(zip(batch, self._encode_clip_batch(batch).cpu()))
+        return torch.stack([self._text_cache[text] for text in texts]).to(self.local_encoder.part_query)
+
+    def forward(
+        self, part_texts: list, global_text: str = None
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Encode a global class anchor and separate anchors for each body part."""
+        if not part_texts:
+            raise ValueError("At least one class with body-part descriptions is required.")
+        parts_by_class = [part_texts] if isinstance(part_texts[0], str) else part_texts
+        if any(len(parts) != self.num_parts for parts in parts_by_class):
+            raise ValueError(f"Each class must supply {self.num_parts} body-part descriptions.")
+
+        if global_text is None:
+            global_texts = [" ".join(parts) for parts in parts_by_class]
         else:
-            # Single class
-            with torch.no_grad():
-                part_features = self.encode_text(part_texts).unsqueeze(0)  # (1, P, D)
-        
-        # Encode global text if provided
-        if global_text is not None:
-            with torch.no_grad():
-                global_features = self.encode_text([global_text])  # (1, D)
-        else:
-            # Use concatenated part features as global
-            global_features = part_features.mean(dim=1)  # (B, D)
-        
-        # Project global features
-        global_features = self.global_proj(global_features)
-        
-        # Refine part-level features using local encoder
-        part_features = self.local_encoder(part_features, global_features)
-        
-        # L2 normalize
-        global_features = F.normalize(global_features, p=2, dim=-1)
-        part_features = F.normalize(part_features, p=2, dim=-1)
-        
+            global_texts = [global_text] * len(parts_by_class)
+        part_texts = [text for parts in parts_by_class for text in parts]
+        features = self.encode_text(global_texts + part_texts)
+
+        num_classes = len(parts_by_class)
+        global_features = F.normalize(self.global_proj(features[:num_classes]), dim=-1)
+        part_features = features[num_classes:].reshape(num_classes, self.num_parts, self.clip_dim)
+        part_features = F.normalize(self.local_encoder(part_features, global_features), dim=-1)
         return global_features, part_features
 
 
@@ -256,7 +220,7 @@ if __name__ == "__main__":
     
     print("Generated prompts for action 'running':")
     for i, prompt in enumerate(prompts["running"]):
-        print(f"  {encoder.BODY_PARTS[i]}: {prompt}")
+        print(f"  {generator.BODY_PARTS[i]}: {prompt}")
     
     # Test encoding (requires GPU)
     # device = "cuda" if torch.cuda.is_available() else "cpu"

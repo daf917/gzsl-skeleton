@@ -2,8 +2,9 @@
 
 # Dataset configuration
 dataset:
-  name: "ntu60"  # nt60, nt120, ucf101, pku_mmd, hmdb51
+  name: "ntu60"  # ntu60, ntu120, ucf101, pku_mmd
   data_dir: "./data/ntu60/"
+  data_file: null  # Optional explicit preprocessed NPZ.
   num_classes: 60
   num_joints: 25
   split:
@@ -22,27 +23,24 @@ model:
 text_encoder:
   clip_model: "ViT-B/32"
   freeze_clip: True
-  local_encoder_dim: 512
 
 # Skeleton encoder configuration
 skeleton_encoder:
-  shift_gcn_pretrained: "./checkpoints/shift_gcn.pth"
-  local_encoder_hidden_dim: 512
+  shift_gcn_pretrained: null  # Set only to a checkpoint trained on this class split.
 
 # Training configuration
 training:
-  batch_size: 32
-  num_epochs: 100
+  batch_size: 64
+  num_epochs: 80
   learning_rate: 0.0001
-  weight_decay: 0.0001
+  weight_decay: 0.0005
   scheduler: "cosine"
-  warmup_epochs: 5
 
   # Loss weights
   lambda_p: 1.0  # Primitive-level alignment
   lambda_g: 1.0  # Global-level alignment
   lambda_c: 0.5  # Consistency loss
-  lambda_i: 0.1  # Independence loss
+  lambda_d: 0.1  # Primitive decorrelation
 
   # Temperature for contrastive loss
   temperature: 0.07
@@ -66,10 +64,8 @@ prompt:
 # Evaluation
 evaluation:
   metrics: ["acc_s", "acc_u", "hm"]
-  test_interval: 1
 
 # Logging
 logging:
   log_dir: "./logs/"
   checkpoint_dir: "./checkpoints/"
-  save_interval: 10

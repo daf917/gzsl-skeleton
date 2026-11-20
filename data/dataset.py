@@ -1,438 +1,195 @@
-"""
-Dataset module for skeleton-based action recognition
-Supports NTU RGB+D 60, NTU RGB+D 120, UCF101, PKU-MMD, and HMDB-51
-"""
+"""Load normalized 2D skeletons and explicit GZSL class partitions."""
 
-import os
+from __future__ import annotations
+
 import json
-import torch
-from torch.utils.data import Dataset
-import numpy as np
-from typing import Dict, List, Tuple, Optional
-import pickle
 from pathlib import Path
 
-
-# NTU RGB+D joint connections
-NTU_EDGE = [
-    (0, 1), (1, 2), (2, 3), (3, 4),  # Head
-    (1, 5), (5, 6), (6, 7),  # Left arm
-    (1, 8), (8, 9), (9, 10),  # Right arm
-    (1, 11), (11, 12), (12, 13),  # Torso
-    (13, 14), (14, 15),  # Left leg
-    (13, 16), (16, 17)  # Right leg
-]
+import numpy as np
+import torch
+from torch.utils.data import Dataset
 
 
-class NTU60Dataset(Dataset):
-    """
-    NTU RGB+D 60 Dataset
-    """
+SAMPLE_SPLITS = {"train": 0, "val": 1, "test": 2}
+DATASET_SPECS = {
+    "ntu60": (60, 25),
+    "ntu120": (120, 25),
+    "pku_mmd": (51, 25),
+    "ucf101": (101, 17),
+    "hmdb51": (51, 17),
+    "ssv2": (174, 17),
+}
 
-    # Class names for NTU60
-    CLASS_NAMES = [
-        "drink water", "eat meal", "brushing teeth", "brushing hair", "drop",
-        "pickup", "throw", "sitting down", "standing up", "clapping",
-        "reading", "writing", "tear up paper", "wear jacket", "take off jacket",
-        "wear a shoe", "take off a shoe", "wear on glasses", "take off glasses",
-        "put on bag", "take off bag", "put on / take off hat", "cheer up",
-        "hand waving", "kicking something", "put something somewhere", "grab someone's part",
-        "stick out hand", "touch back", "squat", "jump up", "make arm straight",
-        "cross arms in front", "put arms behind", "put arms behind head",
-        "go sideways", "turn around", "look at person", "shake fist", "hit someone",
-        "kick ball", "swing baseball bat", "play with phone", "play with tablet",
-        "point at person", "point at something", "checking watch", "rub hands",
-        "nod head", "shake head", "touch head", "touch face", "wipe face",
-        "salute", "shake hands", "hug", "touch someone's shoulder"
-    ]
 
-    NUM_CLASSES = 60
-    NUM_JOINTS = 25
+def canonical_dataset_name(name):
+    key = name.lower().replace("-", "_")
+    aliases = {"hmdb_51": "hmdb51", "ss_v2": "ssv2"}
+    return aliases.get(key, key)
 
-    def __init__(self,
-                 data_dir: str,
-                 split: str = 'train',
-                 split_file: Optional[str] = None,
-                 max_frames: int = 300,
-                 temporal_downsample: int = 1):
-        """
-        Args:
-            data_dir: Path to NTU60 data directory
-            split: 'train', 'val', or 'test'
-            split_file: Optional file specifying train/test split
-            max_frames: Maximum frames to sample
-            temporal_downsample: Temporal downsampling ratio
-        """
-        self.data_dir = data_dir
+
+class SkeletonDataset(Dataset):
+    """Read a split from an NPZ created by scripts/preprocess_skeletons.py."""
+
+    DATASET_NAME = None
+
+    def __init__(self, data_dir, split="train", data_file=None, *, dataset_name=None):
+        self.dataset_name = canonical_dataset_name(dataset_name or self.DATASET_NAME or "")
+        if self.dataset_name not in DATASET_SPECS:
+            raise ValueError(f"Unknown dataset: {self.dataset_name}")
+        num_classes, num_joints = DATASET_SPECS[self.dataset_name]
         self.split = split
-        self.max_frames = max_frames
-        self.temporal_downsample = temporal_downsample
+        if split not in SAMPLE_SPLITS:
+            raise ValueError(f"Unknown sample partition {split!r}. Use train, val, or test.")
 
-        self.samples = []
-        self.labels = []
+        path = Path(data_file) if data_file is not None else Path(data_dir) / f"{self.dataset_name}_skeletons.npz"
+        if not path.is_file():
+            raise FileNotFoundError(f"Preprocessed skeleton data not found: {path}")
+        with np.load(path, allow_pickle=False) as data:
+            missing = {"skeletons", "labels", "split"} - set(data.files)
+            if missing:
+                raise ValueError(f"{path} is missing arrays: {', '.join(sorted(missing))}")
+            skeletons, labels, split_ids = data["skeletons"], data["labels"], data["split"]
+            if skeletons.ndim != 4 or skeletons.shape[1:] != (64, num_joints, 2):
+                raise ValueError(f"Expected (N, 64, {num_joints}, 2) image-plane skeletons, got {skeletons.shape} in {path}")
+            num_samples = len(skeletons)
+            if not np.isfinite(skeletons).all():
+                raise ValueError(f"Skeletons in {path} contain nonfinite coordinates.")
+            if labels.shape != (num_samples,) or not np.issubdtype(labels.dtype, np.integer):
+                raise ValueError(f"Expected one integer class label per skeleton in {path}.")
+            if np.any((labels < 0) | (labels >= num_classes)):
+                raise ValueError(f"Labels in {path} must be zero-based and below {num_classes}.")
+            if (
+                split_ids.shape != (num_samples,) or not np.issubdtype(split_ids.dtype, np.integer)
+                or not np.isin(split_ids, tuple(SAMPLE_SPLITS.values())).all()
+            ):
+                raise ValueError(f"Expected one explicit sample partition (0 train, 1 val, 2 test) per skeleton in {path}.")
+            mask = split_ids == SAMPLE_SPLITS[split]
+            if not mask.any():
+                raise ValueError(f"No {split} samples in {path}.")
 
-        self._load_data(split_file)
+            self.samples = skeletons[mask].astype(np.float32, copy=False)
+            self.labels = labels[mask].astype(np.int64, copy=False)
+            self.sample_ids = None
+            if "sample_ids" in data:
+                sample_ids = data["sample_ids"]
+                if sample_ids.shape != (num_samples,) or np.unique(sample_ids).size != num_samples:
+                    raise ValueError(f"Expected distinct sample_ids in {path}.")
+                self.sample_ids = sample_ids[mask]
+            self.attribute_mean = self.attribute_std = None
+            if "attribute_mean" in data or "attribute_std" in data:
+                if "attribute_mean" not in data or "attribute_std" not in data:
+                    raise ValueError(f"Both attribute_mean and attribute_std must be present in {path}.")
+                self.attribute_mean = data["attribute_mean"]
+                self.attribute_std = data["attribute_std"]
+                if (
+                    self.attribute_mean.shape != (8,) or self.attribute_std.shape != (8,)
+                    or not np.isfinite(self.attribute_mean).all()
+                    or not np.isfinite(self.attribute_std).all()
+                    or (self.attribute_std < 0).any()
+                ):
+                    raise ValueError(f"Expected eight finite attribute means and nonnegative standard deviations in {path}.")
 
-    def _load_data(self, split_file: Optional[str] = None):
-        """Load skeleton data"""
-        # Check if data exists in preprocessed format
-        data_file = os.path.join(self.data_dir, 'ntu60_skeletons.npz')
+    def __len__(self):
+        return len(self.labels)
 
-        if os.path.exists(data_file):
-            # Load preprocessed data
-            data = np.load(data_file, allow_pickle=True)
-            self.samples = data['skeletons']
-            self.labels = data['labels']
+    def __getitem__(self, index):
+        return torch.from_numpy(self.samples[index]), int(self.labels[index])
 
-            if self.split == 'train':
-                mask = data['split'] == 0
-            elif self.split == 'val':
-                mask = data['split'] == 1
-            else:
-                mask = data['split'] == 2
+    @classmethod
+    def get_class_name(cls, label):
+        prompts = Path(__file__).resolve().parent / "prompts" / f"{cls.DATASET_NAME}.json"
+        if not prompts.is_file():
+            raise FileNotFoundError(f"Class names are not available in {prompts}.")
+        records = json.loads(prompts.read_text(encoding="utf-8"))
+        return {entry["class_id"]: entry["action_class"] for entry in records}[label]
 
-            self.samples = self.samples[mask]
-            self.labels = self.labels[mask]
-        else:
-            # Try to load from original format
-            self._load_from_raw()
 
-    def _load_from_raw(self):
-        """Load from original NTU format"""
-        # NTU60 typically uses .skeleton files or pre-extracted features
-        print(f"Looking for preprocessed NTU60 arrays in {self.data_dir}")
-
-        # Check for common data locations
-        possible_paths = [
-            os.path.join(self.data_dir, 'train_data.npy'),
-            os.path.join(self.data_dir, 'test_data.npy'),
-            os.path.join(self.data_dir, 'ntu60_train.npy'),
-            os.path.join(self.data_dir, 'ntu60_test.npy'),
-        ]
-
-        for path in possible_paths:
-            if os.path.exists(path):
-                print(f"Found data at {path}")
-                data = np.load(path, allow_pickle=True)
-                self.samples = data['skeletons']
-                self.labels = data['labels']
-                break
-
-    def __len__(self) -> int:
-        return len(self.samples)
-
-    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, int]:
-        """Get a sample"""
-        skeleton = self.samples[idx]
-        label = self.labels[idx]
-
-        # Process skeleton
-        skeleton = self._process_skeleton(skeleton)
-
-        return skeleton, label
-
-    def _process_skeleton(self, skeleton: np.ndarray) -> torch.Tensor:
-        """
-        Process skeleton sequence
-
-        Args:
-            skeleton: Raw skeleton (T, J, 3) or (T, J, 4)
-
-        Returns:
-            Processed skeleton (T, J, 3)
-        """
-        # Take first 3 dimensions (x, y, z)
-        if skeleton.shape[-1] > 3:
-            skeleton = skeleton[..., :3]
-
-        # Temporal sampling
-        T = skeleton.shape[0]
-        if self.temporal_downsample > 1 and T > self.max_frames:
-            indices = np.linspace(0, T - 1, self.max_frames // self.temporal_downsample, dtype=int)
-            skeleton = skeleton[indices]
-
-        # Convert to tensor
-        skeleton = torch.from_numpy(skeleton).float()
-
-        return skeleton
-
-    @staticmethod
-    def get_class_name(label: int) -> str:
-        """Get class name from label"""
-        return NTU60Dataset.CLASS_NAMES[label]
+class NTU60Dataset(SkeletonDataset):
+    DATASET_NAME = "ntu60"
+    NUM_CLASSES, NUM_JOINTS = DATASET_SPECS[DATASET_NAME]
 
 
 class NTU120Dataset(NTU60Dataset):
-    """
-    NTU RGB+D 120 Dataset
-    """
-
-    NUM_CLASSES = 120
-    NUM_JOINTS = 25
-
-    # Subset of class names (full list is much longer)
-    CLASS_NAMES = NTU60Dataset.CLASS_NAMES + [
-        # Additional 60 classes for NTU120
-        "other actions..."
-    ]
+    DATASET_NAME = "ntu120"
+    NUM_CLASSES, NUM_JOINTS = DATASET_SPECS[DATASET_NAME]
 
 
-class PKUMMDDataset(Dataset):
-    """
-    PKU-MMD Dataset
-    """
-
-    CLASS_NAMES = [
-        "bow", "brushing teeth", "check time", "cheer up", "clean",
-        "clapping", "drink", "eat", "fall", "fight",
-        "give an item", "hand waving", "hit", "hug", "kick",
-        "lie down", "make a phone call", "point", "pose", "push",
-        "put on clothes", "read", "ride bike", "ride horse", "run",
-        "sit down", "stand up", "take a photo", "take off clothes", "throw",
-        "touch", "turn left", "turn right", "walk", "wave goodbye",
-        "wear glasses", "wear hat", "wear shoes", "write", "yawn"
-    ]
-
-    NUM_CLASSES = 51
-    NUM_JOINTS = 25
-
-    def __init__(self,
-                 data_dir: str,
-                 split: str = 'train',
-                 max_frames: int = 300,
-                 temporal_downsample: int = 1):
-        self.data_dir = data_dir
-        self.split = split
-        self.max_frames = max_frames
-        self.temporal_downsample = temporal_downsample
-
-        self.samples = []
-        self.labels = []
-
-        self._load_data()
-
-    def _load_data(self):
-        """Load PKU-MMD data"""
-        data_file = os.path.join(self.data_dir, 'pku_mmd_skeletons.npz')
-
-        if os.path.exists(data_file):
-            data = np.load(data_file, allow_pickle=True)
-            self.samples = data['skeletons']
-            self.labels = data['labels']
-        else:
-            print(f"Warning: PKU-MMD data not found at {data_file}")
-
-    def __len__(self) -> int:
-        return len(self.samples)
-
-    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, int]:
-        skeleton = self.samples[idx]
-        label = self.labels[idx]
-
-        if skeleton.shape[-1] > 3:
-            skeleton = skeleton[..., :3]
-
-        skeleton = torch.from_numpy(skeleton).float()
-
-        return skeleton, label
+class PKUMMDDataset(SkeletonDataset):
+    DATASET_NAME = "pku_mmd"
+    NUM_CLASSES, NUM_JOINTS = DATASET_SPECS[DATASET_NAME]
 
 
-class UCF101Dataset(Dataset):
-    """
-    UCF101 Dataset (with pose estimation)
-    """
-
-    # Subset of class names
-    CLASS_NAMES = [
-        "Basketball", "BasketballDunk", "Biking", "CliffDiving", "CricketBowling",
-        "CricketShot", "Diving", "Fencing", "FloorGymnastics", "GolfSwing",
-        "HorseRiding", "IceDancing", "JumpingJack", "Lunges", "MilitaryParade",
-        "PullUps", "Punch", "PushUps", "RockClimbingIndoor", "RopeClimbing",
-        "Rowing", "SalsaSpin", "SkateBoarding", "Skiing", "Skijet",
-        "SoccerJuggling", "Swing", "TaiChi", "TennisSwing", "ThrowDisc",
-        "VolleyballSpiking", "Walking", "YoYo"
-    ]
-
-    NUM_CLASSES = 101
-    NUM_JOINTS = 17  # COCO format
-
-    def __init__(self,
-                 data_dir: str,
-                 split: str = 'train',
-                 max_frames: int = 300,
-                 temporal_downsample: int = 1):
-        self.data_dir = data_dir
-        self.split = split
-        self.max_frames = max_frames
-        self.temporal_downsample = temporal_downsample
-
-        self.samples = []
-        self.labels = []
-
-        self._load_data()
-
-    def _load_data(self):
-        """Load UCF101 data"""
-        data_file = os.path.join(self.data_dir, 'ucf101_skeletons.npz')
-
-        if os.path.exists(data_file):
-            data = np.load(data_file, allow_pickle=True)
-            self.samples = data['skeletons']
-            self.labels = data['labels']
-        else:
-            print(f"Warning: UCF101 data not found at {data_file}")
-
-    def __len__(self) -> int:
-        return len(self.samples)
-
-    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, int]:
-        skeleton = self.samples[idx]
-        label = self.labels[idx]
-
-        if skeleton.shape[-1] > 3:
-            skeleton = skeleton[..., :3]
-
-        skeleton = torch.from_numpy(skeleton).float()
-
-        return skeleton, label
+class UCF101Dataset(SkeletonDataset):
+    DATASET_NAME = "ucf101"
+    NUM_CLASSES, NUM_JOINTS = DATASET_SPECS[DATASET_NAME]
 
 
-class HMDB51Dataset(Dataset):
-    """
-    HMDB51 Dataset for few-shot learning
-    """
+class HMDB51Dataset(SkeletonDataset):
+    DATASET_NAME = "hmdb51"
+    NUM_CLASSES, NUM_JOINTS = DATASET_SPECS[DATASET_NAME]
 
-    CLASS_NAMES = [
-        "brush_hair", "catch", "clap", "climb", "climb_stairs",
-        "dance", "drink", "drive", "eat", "fall_flat",
-        "fling", "golf", "hit", "hug", "jump",
-        "kick", "kiss", "laugh", "pour", "pullup",
-        "punch", "push", "ride_bike", "ride_horse", "run",
-        "shoot_ball", "shoot_bow", "shoot_gun", "sit", "situp",
-        "smile", "smoke", "somersault", "stand", "straw_hat",
-        "swing", "talk", "throw", "turn", "walk",
-        "wave"
-    ]
 
-    NUM_CLASSES = 51
-    NUM_JOINTS = 17  # COCO format
-
-    def __init__(self,
-                 data_dir: str,
-                 split: str = 'train',
-                 num_shots: int = 16,
-                 max_frames: int = 300):
-        """
-        Args:
-            data_dir: Path to data directory
-            split: 'train', 'val', or 'test'
-            num_shots: Number of shots for few-shot learning
-            max_frames: Maximum frames to sample
-        """
-        self.data_dir = data_dir
-        self.split = split
-        self.num_shots = num_shots
-        self.max_frames = max_frames
-
-        self.samples = []
-        self.labels = []
-
-        self._load_data()
-
-    def _load_data(self):
-        """Load HMDB51 data"""
-        data_file = os.path.join(self.data_dir, 'hmdb51_skeletons.npz')
-
-        if os.path.exists(data_file):
-            data = np.load(data_file, allow_pickle=True)
-            self.samples = data['skeletons']
-            self.labels = data['labels']
-        else:
-            print(f"Warning: HMDB51 data not found at {data_file}")
-
-    def __len__(self) -> int:
-        return len(self.samples)
-
-    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, int]:
-        skeleton = self.samples[idx]
-        label = self.labels[idx]
-
-        if skeleton.shape[-1] > 3:
-            skeleton = skeleton[..., :3]
-
-        skeleton = torch.from_numpy(skeleton).float()
-
-        return skeleton, label
+class SSv2Dataset(SkeletonDataset):
+    DATASET_NAME = "ssv2"
+    NUM_CLASSES, NUM_JOINTS = DATASET_SPECS[DATASET_NAME]
 
 
 class GZSLSplit:
-    """
-    Generalized Zero-Shot Learning split for skeleton datasets
-    """
+    """Load a released class split independently of sample membership."""
 
-    # Standard seen/unseen splits as per paper
     SPLITS = {
-        'ntu60': {'seen': 55, 'unseen': 5},
-        'ntu120': {'seen': 110, 'unseen': 10},
-        'ucf101': {'seen': 80, 'unseen': 21},
-        'pku_mmd': {'seen': 46, 'unseen': 5},
-        'hmdb51': {'seen': 31, 'unseen': 20},
+        "ntu60": {"seen": 55, "unseen": 5},
+        "ntu120": {"seen": 110, "unseen": 10},
+        "ucf101": {"seen": 80, "unseen": 21},
+        "pku_mmd": {"seen": 46, "unseen": 5},
+        "hmdb51": {"seen": 31, "unseen": 20},
     }
 
-    def __init__(self,
-                 dataset_name: str,
-                 split_type: str = 'random',
-                 split_index: int = 1,
-                 split_dir: Optional[str] = None):
-        """
-        Args:
-            dataset_name: Name of the dataset
-            split_type: 'random' or 'provided'
-            split_index: 1-based split id for 3-split protocols
-            split_dir: Optional directory containing released split JSON files
-        """
-        self.dataset_name = dataset_name
+    def __init__(self, dataset_name, split_type="random", split_index=1, split_dir=None):
+        self.dataset_name = canonical_dataset_name(dataset_name)
         self.split_type = split_type
         self.split_index = split_index
-        self.split_info = self.SPLITS.get(dataset_name, {'seen': 55, 'unseen': 5})
-        self._seen_classes = None
-        self._unseen_classes = None
-        self._load_split_file(split_dir)
+        self.split_info = self.SPLITS.get(self.dataset_name)
+        if self.dataset_name not in DATASET_SPECS:
+            raise ValueError(f"Unknown dataset: {dataset_name}")
+        if split_type not in {"random", "provided"} or split_index not in {1, 2, 3}:
+            raise ValueError("Expected random or provided class protocol with split index 1, 2, or 3.")
+        split_dir = Path(split_dir) if split_dir is not None else Path(__file__).resolve().parent / "splits"
+        self.path = split_dir / self.dataset_name / f"{split_type}_split_{split_index}.json"
+        if not self.path.is_file():
+            raise FileNotFoundError(f"Class split manifest not found: {self.path}")
+        payload = json.loads(self.path.read_text(encoding="utf-8"))
+        if payload.get("dataset", self.dataset_name) != self.dataset_name:
+            raise ValueError(f"Dataset field does not match {self.dataset_name} in {self.path}.")
+        if payload.get("split_index", split_index) != split_index:
+            raise ValueError(f"Split index does not match {split_index} in {self.path}.")
+        if payload.get("protocol", f"3-split {split_type}") not in {split_type, f"3-split {split_type}"}:
+            raise ValueError(f"Protocol does not match {split_type} in {self.path}.")
+        try:
+            self._seen_classes = [entry["class_id"] for entry in payload["seen_classes"]]
+            self._unseen_classes = [entry["class_id"] for entry in payload["unseen_classes"]]
+        except (KeyError, TypeError) as exc:
+            raise ValueError(f"Class split must supply seen_classes and unseen_classes with class_id values in {self.path}.") from exc
+        labels = self.get_all_classes()
+        num_classes, _ = DATASET_SPECS[self.dataset_name]
+        if (
+            not self._seen_classes or not self._unseen_classes or len(labels) != num_classes
+            or any(type(label) is not int for label in labels) or set(labels) != set(range(num_classes))
+        ):
+            raise ValueError(f"Class split must partition all {num_classes} zero-based labels exactly once in {self.path}.")
+        if self.split_info and (len(self._seen_classes), len(self._unseen_classes)) != (
+            self.split_info["seen"], self.split_info["unseen"]
+        ):
+            raise ValueError(f"Class split sizes do not match the documented protocol in {self.path}.")
 
-    def _load_split_file(self, split_dir: Optional[str] = None):
-        """Load released split JSON if available."""
-        if split_dir is None:
-            split_dir = Path(__file__).resolve().parent / 'splits'
-        else:
-            split_dir = Path(split_dir)
+    def get_seen_classes(self):
+        return list(self._seen_classes)
 
-        split_file = split_dir / self.dataset_name / f'{self.split_type}_split_{self.split_index}.json'
-        if not split_file.exists():
-            return
+    def get_unseen_classes(self):
+        return list(self._unseen_classes)
 
-        with open(split_file, 'r', encoding='utf-8') as f:
-            payload = json.load(f)
-
-        self._seen_classes = [int(item['class_id']) for item in payload['seen_classes']]
-        self._unseen_classes = [int(item['class_id']) for item in payload['unseen_classes']]
-
-    def get_seen_classes(self) -> List[int]:
-        """Get list of seen class indices"""
-        if self._seen_classes is not None:
-            return self._seen_classes
-        return list(range(self.split_info['seen']))
-
-    def get_unseen_classes(self) -> List[int]:
-        """Get list of unseen class indices"""
-        if self._unseen_classes is not None:
-            return self._unseen_classes
-        start = self.split_info['seen']
-        end = start + self.split_info['unseen']
-        return list(range(start, end))
-
-    def get_all_classes(self) -> List[int]:
-        """Get all class indices"""
-        return self.get_seen_classes() + self.get_unseen_classes()
+    def get_all_classes(self):
+        return self._seen_classes + self._unseen_classes
 
 
 class FewShotDataset(Dataset):
@@ -495,7 +252,7 @@ class FewShotDataset(Dataset):
     def __len__(self) -> int:
         return len(self.episodes)
 
-    def __getitem__(self, idx: int) -> Tuple[List[torch.Tensor], List[int]]:
+    def __getitem__(self, idx: int) -> tuple[list[torch.Tensor], list[int]]:
         """Get a few-shot episode"""
         episode = self.episodes[idx]
 
@@ -510,76 +267,20 @@ class FewShotDataset(Dataset):
         return skeletons, labels
 
 
-def create_dataset(dataset_name: str,
-                   data_dir: str,
-                   split: str = 'train',
-                   **kwargs) -> Dataset:
-    """
-    Factory function to create dataset
+_DATASET_CLASSES = {
+    dataset.DATASET_NAME: dataset for dataset in
+    (NTU60Dataset, NTU120Dataset, PKUMMDDataset, UCF101Dataset, HMDB51Dataset, SSv2Dataset)
+}
 
-    Args:
-        dataset_name: Name of dataset (ntu60, nt120, ucf101, pku_mmd, hmdb51)
-        data_dir: Path to data directory
-        split: train/val/test
-        **kwargs: Additional arguments
 
-    Returns:
-        Dataset instance
-    """
-    dataset_name = dataset_name.lower()
-
-    if dataset_name == 'ntu60':
-        return NTU60Dataset(data_dir, split, **kwargs)
-    elif dataset_name == 'ntu120':
-        return NTU120Dataset(data_dir, split, **kwargs)
-    elif dataset_name == 'pku_mmd':
-        return PKUMMDDataset(data_dir, split, **kwargs)
-    elif dataset_name == 'ucf101':
-        return UCF101Dataset(data_dir, split, **kwargs)
-    elif dataset_name == 'hmdb51':
-        return HMDB51Dataset(data_dir, split, **kwargs)
-    else:
+def create_dataset(dataset_name, data_dir, split="train", **kwargs):
+    name = canonical_dataset_name(dataset_name)
+    if name not in _DATASET_CLASSES:
         raise ValueError(f"Unknown dataset: {dataset_name}")
+    return _DATASET_CLASSES[name](data_dir, split, **kwargs)
 
 
-def download_ntu60(data_dir: str):
-    """
-    Print the official NTU60 dataset source.
-    """
-    print("Note: Please download NTU60 dataset manually from:")
-    print("https://github.com/shahroudy/NTURGB-D")
-    print(f"Place the data in: {data_dir}")
-
-
-def preprocess_dataset(dataset_name: str, data_dir: str, output_dir: str):
-    """
-    Preprocess skeleton data
-
-    Args:
-        dataset_name: Name of dataset
-        data_dir: Raw data directory
-        output_dir: Output directory for preprocessed data
-    """
-    print(f"Preprocessing {dataset_name}...")
-
-    # This would include:
-    # 1. Parsing original data format
-    # 2. Extracting skeleton sequences
-    # 3. Normalizing coordinates
-    # 4. Saving to efficient format
-
-    print(f"Preprocessing complete. Data saved to {output_dir}")
-
-
-if __name__ == "__main__":
-    # Test dataset creation
-    print("Testing dataset creation...")
-
-    # Test GZSL split
-    split = GZSLSplit('ntu60')
-    print(f"NTU60 seen classes: {split.get_seen_classes()}")
-    print(f"NTU60 unseen classes: {split.get_unseen_classes()}")
-
-    split = GZSLSplit('ntu120')
-    print(f"NTU120 seen classes: {split.get_seen_classes()}")
-    print(f"NTU120 unseen classes: {split.get_unseen_classes()}")
+def download_ntu60(data_dir):
+    """Report the source of the NTU RGB+D 60 dataset."""
+    print("Download NTU RGB+D 60 from https://github.com/shahroudy/NTURGB-D")
+    print(f"Place the raw skeleton data in {data_dir}.")
