@@ -23,12 +23,15 @@ class LocalSkeletonEncoder(nn.Module):
         self.output_proj = nn.Linear(hidden_dim, hidden_dim)
 
     def forward(self, motion_attributes, global_feature):
+        """Use each part's motion attributes to query the holistic temporal context."""
         local = torch.stack([
             encoder(motion_attributes[:, :, part]).mean(dim=1)
             for part, encoder in enumerate(self.part_encoders)
         ], dim=1)
-        global_token = self.global_norm(global_feature).unsqueeze(1)
-        guidance, _ = self.part_attention(local, global_token, global_token, need_weights=False)
+        context = self.global_norm(global_feature)
+        if context.ndim == 2:
+            context = context.unsqueeze(1)
+        guidance, _ = self.part_attention(local, context, context, need_weights=False)
         return F.normalize(self.output_proj(self.output_norm(local + guidance)), dim=-1)
 
 
@@ -58,8 +61,11 @@ class SkeletonEncoder(nn.Module):
     def forward(
         self, skeleton: torch.Tensor, motion_attributes: torch.Tensor,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
-        global_feature = F.normalize(self.global_proj(self.shift_gcn(skeleton)), dim=-1)
-        return global_feature, self.local_encoder(motion_attributes, global_feature)
+        pooled, temporal_tokens = self.shift_gcn(skeleton, return_temporal_tokens=True)
+        global_feature = F.normalize(self.global_proj(pooled), dim=-1)
+        projected_tokens = self.global_proj(temporal_tokens)
+        part_features = self.local_encoder(motion_attributes, projected_tokens)
+        return global_feature, part_features
 
     def train(self, mode=True):
         super().train(mode)

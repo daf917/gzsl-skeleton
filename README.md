@@ -4,7 +4,7 @@ Jinlong Wang, Xuan Liu, Bin Lyu, Jinchao Ge, and Jiahui Yu
 
 ![Framework overview](image/method.png)
 
-The skeleton branch encodes motion attributes for six body parts and aggregates the resulting primitives with attention. The text branch uses frozen CLIP ViT-B/32 to construct global and part-level semantic anchors. Training uses separate primitive and global alignment losses, compositional consistency, and primitive decorrelation. Inference L2-normalizes the aggregated feature and scores it against the global text anchors for the joint seen/unseen label space.
+The skeleton branch encodes motion attributes for six body parts and aggregates the resulting primitives with attention. The text branch uses frozen CLIP ViT-B/32 to construct global and part-level semantic anchors. Training uses separate primitive and global alignment losses, compositional consistency, and primitive decorrelation. Skeleton part queries attend to the pre-pooling Shift-GCN temporal features. The aggregation follows Equations (13) to (15). Inference L2-normalizes the weighted sum and scores it against the global text anchors for the joint seen/unseen label space.
 
 ## Installation
 
@@ -34,7 +34,7 @@ Run splits 1–3 separately for each dataset and protocol. Put their result obje
 python scripts/test.py --aggregate-split-results split_metrics.json
 ```
 
-The aggregation first averages the unrounded seen and unseen accuracies across the three splits and then computes their harmonic mean. Use a separate file per method, dataset, and split protocol.
+Within each split, Acc_s and Acc_u give equal weight to each evaluated class. The aggregation averages the unrounded Acc_s and Acc_u across the three splits, then computes HM from those means. Use a separate file per method, dataset, and split protocol.
 
 ## Few-shot evaluation
 
@@ -63,6 +63,16 @@ Use a checkpoint trained with compatible 17-joint inputs. Reported few-shot resu
 | SSv2 | 8.2 | 10.1 | 11.8 | 15.4 |
 
 DVTA reports higher accuracy on all four SSv2 shot settings.
+
+## PartPurity
+
+Provide a motion-mode assignment per sample and body part. The script computes the class-average dominant-mode fraction for the selected split.
+
+```bash
+python scripts/compute_part_purity.py --dataset ntu60 --split-protocol random --split-index 1 --assignments modes.npz
+```
+
+The NPZ contains integer arrays `labels` of shape `[N]` and `motion_modes` of shape `[N, P]`. Use `--baseline` to compare assignments from a model trained without composition.
 
 ## Citation
 

@@ -2,8 +2,9 @@ import hashlib
 import os
 import urllib
 import warnings
+from collections import deque
 from packaging import version
-from typing import Union, List
+from typing import List, Sequence, Union
 
 import torch
 from PIL import Image
@@ -24,7 +25,7 @@ if version.parse(torch.__version__) < version.parse("1.7.1"):
     warnings.warn("PyTorch version 1.7.1 or higher is recommended")
 
 
-__all__ = ["available_models", "load", "tokenize"]
+__all__ = ["available_models", "load", "tokenize", "tokenize_part_groups"]
 _tokenizer = _Tokenizer()
 
 _MODELS = {
@@ -242,4 +243,35 @@ def tokenize(texts: Union[str, List[str]], context_length: int = 77, truncate: b
                 raise RuntimeError(f"Input {texts[i]} is too long for context length {context_length}")
         result[i, :len(tokens)] = torch.tensor(tokens)
 
+    return result
+
+
+
+def tokenize_part_groups(groups: Sequence[Sequence[str]], context_length: int = 77) -> torch.Tensor:
+    """Pack one joint CLIP sequence per class, retaining a prefix of every nonempty part.
+
+    Allocate the content budget round-robin when the full concatenation is too long.
+    The sequences keep their original part order and use CLIP's native context length.
+    """
+    capacity = context_length - 2
+    if capacity < 0:
+        raise ValueError("CLIP context must leave room for both special tokens.")
+    start = _tokenizer.encoder["<|startoftext|>"]
+    end = _tokenizer.encoder["<|endoftext|>"]
+    result = torch.zeros((len(groups), context_length), dtype=torch.long)
+    for row, group in enumerate(groups):
+        encoded = [_tokenizer.encode(part) for part in group]
+        indices = deque(i for i, part in enumerate(encoded) if part)
+        if len(indices) > capacity:
+            raise ValueError("CLIP context cannot retain a token for every nonempty description.")
+        widths = [len(part) for part in encoded]
+        if sum(widths) > capacity:
+            widths = [0] * len(encoded)
+            for _ in range(capacity):
+                index = indices.popleft()
+                widths[index] += 1
+                if widths[index] < len(encoded[index]):
+                    indices.append(index)
+        tokens = [start, *(token for part, width in zip(encoded, widths) for token in part[:width]), end]
+        result[row, :len(tokens)] = torch.tensor(tokens)
     return result

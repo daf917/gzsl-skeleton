@@ -57,7 +57,7 @@ def compute_gzsl_metrics(y_true: torch.Tensor,
                         seen_classes: List[int],
                         unseen_classes: List[int]) -> Dict[str, float]:
     """
-    Compute GZSL metrics
+    Compute class-average seen and unseen accuracies and their harmonic mean.
     
     Args:
         y_true: Ground truth labels
@@ -68,32 +68,15 @@ def compute_gzsl_metrics(y_true: torch.Tensor,
     Returns:
         Dictionary with Acc_s, Acc_u, and HM
     """
-    import torch
+    observed_classes = set(y_true.unique().cpu().tolist())
+    seen = sorted(observed_classes.intersection(seen_classes))
+    unseen = sorted(observed_classes.intersection(unseen_classes))
+    num_classes = max([*seen, *unseen], default=-1) + 1
+    per_class = compute_per_class_accuracy(y_true, y_pred, num_classes)
 
-    # Convert to numpy for easier processing
-    y_true = y_true.cpu().numpy()
-    y_pred = y_pred.cpu().numpy()
-    
-    # Compute seen accuracy
-    seen_mask = np.isin(y_true, seen_classes)
-    if seen_mask.sum() > 0:
-        acc_s = compute_acc(
-            torch.from_numpy(y_true[seen_mask]),
-            torch.from_numpy(y_pred[seen_mask])
-        )
-    else:
-        acc_s = 0.0
-    
-    # Compute unseen accuracy
-    unseen_mask = np.isin(y_true, unseen_classes)
-    if unseen_mask.sum() > 0:
-        acc_u = compute_acc(
-            torch.from_numpy(y_true[unseen_mask]),
-            torch.from_numpy(y_pred[unseen_mask])
-        )
-    else:
-        acc_u = 0.0
-    
+    acc_s = float(per_class[seen].mean()) if seen else 0.0
+    acc_u = float(per_class[unseen].mean()) if unseen else 0.0
+
     hm = _harmonic_mean(acc_s, acc_u)
     
     return {

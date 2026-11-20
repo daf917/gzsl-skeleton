@@ -62,10 +62,11 @@ class LocalTextEncoder(nn.Module):
         Returns:
             Refined part-level text features (B, P, D)
         """
-        part_tokens = self.norm1(self.output_proj(part_features))
-        queries = self.part_query + global_feature.unsqueeze(1)
-        refined, _ = self.cross_attention(queries, part_tokens, part_tokens, need_weights=False)
-        refined = queries + refined
+        part_tokens = self.output_proj(part_features)
+        context = self.norm1(torch.cat((global_feature.unsqueeze(1), part_tokens), dim=1))
+        queries = self.part_query + part_tokens
+        attended, _ = self.cross_attention(queries, context, context, need_weights=False)
+        refined = part_tokens + attended
         return refined + self.ffn(self.norm2(refined))
 
 
@@ -125,25 +126,36 @@ class TextEncoder(nn.Module):
             self.clip_model.eval()
         return self
 
-    def _encode_clip_batch(self, texts: list) -> torch.Tensor:
-        tokens = clip.tokenize(
-            texts, context_length=self.clip_model.context_length, truncate=True
-        ).to(self.clip_model.text_projection.device)
+    def _encode_clip_batch(self, prompts: list) -> torch.Tensor:
+        context_length = self.clip_model.context_length
+        text_rows = [(i, text) for i, text in enumerate(prompts) if isinstance(text, str)]
+        part_rows = [(i, parts) for i, parts in enumerate(prompts) if isinstance(parts, tuple)]
+        tokens = torch.empty((len(prompts), context_length), dtype=torch.long)
+        if text_rows:
+            indices, texts = zip(*text_rows)
+            tokens[list(indices)] = clip.tokenize(list(texts), context_length=context_length, truncate=True).long()
+        if part_rows:
+            indices, parts = zip(*part_rows)
+            tokens[list(indices)] = clip.tokenize_part_groups(parts, context_length)
+        tokens = tokens.to(self.clip_model.text_projection.device)
         features = self.clip_model.encode_text(tokens).to(dtype=self.local_encoder.part_query.dtype)
         return F.normalize(features, dim=-1)
 
-    def encode_text(self, texts: list) -> torch.Tensor:
-        """Encode prompts under CLIP's fixed context length."""
+    def _encode_prompts(self, prompts: list) -> torch.Tensor:
         if not self.freeze_clip:
-            return self._encode_clip_batch(texts)
+            return self._encode_clip_batch(prompts)
 
-        # Only CLIP embeddings are fixed. The local text encoder is trained each step.
-        missing_texts = list(dict.fromkeys(text for text in texts if text not in self._text_cache))
+        # Cache fixed CLIP outputs. The local text encoder is trained each step.
+        missing = list(dict.fromkeys(prompt for prompt in prompts if prompt not in self._text_cache))
         with torch.no_grad():
-            for start in range(0, len(missing_texts), 64):
-                batch = missing_texts[start:start + 64]
+            for start in range(0, len(missing), 64):
+                batch = missing[start:start + 64]
                 self._text_cache.update(zip(batch, self._encode_clip_batch(batch).cpu()))
-        return torch.stack([self._text_cache[text] for text in texts]).to(self.local_encoder.part_query)
+        return torch.stack([self._text_cache[prompt] for prompt in prompts]).to(self.local_encoder.part_query)
+
+    def encode_text(self, texts: list) -> torch.Tensor:
+        """Encode standalone prompts under CLIP's fixed context length."""
+        return self._encode_prompts(texts)
 
     def forward(
         self, part_texts: list, global_text: str = None
@@ -156,11 +168,11 @@ class TextEncoder(nn.Module):
             raise ValueError(f"Each class must supply {self.num_parts} body-part descriptions.")
 
         if global_text is None:
-            global_texts = [" ".join(parts) for parts in parts_by_class]
+            global_prompts = [tuple(parts) for parts in parts_by_class]
         else:
-            global_texts = [global_text] * len(parts_by_class)
-        part_texts = [text for parts in parts_by_class for text in parts]
-        features = self.encode_text(global_texts + part_texts)
+            global_prompts = [global_text] * len(parts_by_class)
+        local_prompts = [text for parts in parts_by_class for text in parts]
+        features = self._encode_prompts(global_prompts + local_prompts)
 
         num_classes = len(parts_by_class)
         global_features = F.normalize(self.global_proj(features[:num_classes]), dim=-1)

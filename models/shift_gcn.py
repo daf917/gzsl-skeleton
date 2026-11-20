@@ -108,10 +108,16 @@ class ShiftGCN(nn.Module):
             for i, (channels_in, channels_out) in enumerate(zip((2, *widths[:-1]), widths))
         ))
 
-    def forward(self, skeleton):
+    def forward(self, skeleton, *, return_temporal_tokens=False):
+        """Return the pooled feature and optionally the joint-pooled temporal tokens."""
         if skeleton.ndim != 4 or skeleton.shape[-2:] != (self.num_joints, 2):
             raise ValueError(f'Expected skeletons shaped (batch, time, {self.num_joints}, 2).')
         batch, frames, joints, channels = skeleton.shape
         features = self.input_norm(skeleton.reshape(batch, frames, -1).transpose(1, 2))
         features = features.reshape(batch, joints, channels, frames).permute(0, 2, 3, 1)
-        return self.blocks(features).mean(dim=(2, 3))
+        feature_map = self.blocks(features)
+        pooled = feature_map.mean(dim=(2, 3))
+        if return_temporal_tokens:
+            temporal_tokens = feature_map.mean(dim=3).transpose(1, 2)
+            return pooled, temporal_tokens
+        return pooled

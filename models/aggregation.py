@@ -28,8 +28,8 @@ class PrimitiveAggregation(nn.Module):
         self.num_parts = num_parts
         
         # Attention score computation
-        self.W = nn.Linear(feature_dim, feature_dim)
-        self.w = nn.Linear(feature_dim, 1)
+        self.W = nn.Linear(feature_dim, feature_dim, bias=False)
+        self.w = nn.Linear(feature_dim, 1, bias=False)
         
     def forward(self, part_features: torch.Tensor) -> tuple:
         """
@@ -113,8 +113,8 @@ class GlobalConsistencyLoss(nn.Module):
         Returns:
             Consistency loss scalar
         """
-        # Cosine similarity: 1 - cosine_similarity
-        similarity = F.cosine_similarity(compositional_global, shiftgcn_global, dim=-1)
+        # Both inputs are L2-normalized before evaluating the dot product.
+        similarity = (compositional_global * shiftgcn_global).sum(dim=-1)
         
         loss = 1.0 - similarity.mean()
         
